@@ -4,10 +4,10 @@
 
 **Prince Suthar**  
 *AutoGIS Research Lab*  
-\`https://github.com/sutharprin098/VeriGeo\`  
+`https://github.com/sutharprin098/VeriGeo`  
 *November 2026*
 
-> **Manuscript source:** This file is a concise Markdown companion to \`main.tex\`. The LaTeX manuscript is the canonical submission file. Update this summary whenever benchmark metrics or method claims change.
+> **Manuscript source:** This file is a concise Markdown companion to `main.tex`. The LaTeX manuscript is the canonical submission file. Update this summary whenever benchmark metrics or method claims change.
 
 ---
 
@@ -25,9 +25,9 @@ The current SPC SHA-256 digest covers audit metadata (operator, stringified para
 
 | Check | Current behaviour | Important boundary |
 | :--- | :--- | :--- |
-| **CRS** | Selects a projected CRS for metric operations; uses equal-area projections for area/aggregation and UTM/polar options for distance/buffer operations. | Projected CRSs with non-metre axis units are not normalized before metre-valued parameters such as \`distance_m\` are interpreted. |
+| **CRS** | Selects a projected CRS for metric operations; uses equal-area projections for area/aggregation and UTM/polar options for distance/buffer operations. | Projected CRSs with non-metre axis units are not normalized before metre-valued parameters such as `distance_m` are interpreted. |
 | **Attribute scale / MAUP** | Uses lexical and value-range heuristics to classify columns as nominal, intensive, or extensive. Uses pycnophylactic allocation for extensive values and area-weighted averages for intensive values. | Ambiguous non-negative integer fields can be classified as extensive. Area-weighted averaging is not generally an exact method for medians or socioeconomic rates. Full target coverage is not checked by the interpolation routine; callers must validate support coverage before use. |
-| **Geometry / slivers** | Repairs invalid geometries with \`make_valid()\`. Removes overlay pieces only when equivalent width is below 1.0 m and Polsby-Popper compactness is below 0.25. | TOPO-15 shows that the current heuristic still removes a legitimate 0.80 m canal. It is not a complete implementation of the 9-intersection spatial-relation model. |
+| **Geometry / slivers** | Repairs invalid geometries with `make_valid()`. Removes overlay pieces only when equivalent width is below 1.0 m and Polsby-Popper compactness is below 0.25. | TOPO-15 shows that the current heuristic still removes a legitimate 0.80 m canal. It is not a complete implementation of the 9-intersection spatial-relation model. |
 | **Spatial-statistics pre-checks** | Checks target finite values and variance, detects islands, applies a k-NN weights fallback, and iteratively prunes collinear predictors. | For 10 ≤ N < 30, the code records a conditional-permutation mode and requests 999 permutations, but does not run them or calculate p-values. The shared executor emits Moran-style diagnostics for GWR/LISA-labelled tasks; it does not fit GWR, LISA, or Getis-Ord models. |
 
 ## 3. Benchmark results
@@ -46,7 +46,7 @@ The benchmark uses WGS84 ellipsoidal geodesics and local AEQD reference operatio
 ## 4. Remaining failures and repaired stress case
 
 1. **MAUP-14 — unmasked coastal water barrier:** Pycnophylactic smoothing diffuses population across an uninhabited water boundary. Total population remains conserved, but zone NMAE is 66.46%, compared with 56.27% for area-weighted interpolation.
-2. **MAUP-15 — opaque \`attr_val\` column:** Integer-valued median income is inferred as an extensive count and summed, producing approximately 3.893× inflation. Explicit semantic overrides are needed for ambiguous columns.
+2. **MAUP-15 — opaque `attr_val` column:** Integer-valued median income is inferred as an extensive count and summed, producing approximately 3.893× inflation. Explicit semantic overrides are needed for ambiguous columns.
 3. **TOPO-15 — narrow infrastructure:** The 0.80 m utility canal is removed by the thinness/elongation filter; only 67.57% of legitimate area is retained.
 4. **STAT-13 — three collinear predictors:** The revised iterative pre-check removes two predictors and leaves one, recording a condition number of 1.00. This is a pre-check result, not a successful GWR fit. A dedicated regression test has been added on the revision branch but has not yet been executed.
 
