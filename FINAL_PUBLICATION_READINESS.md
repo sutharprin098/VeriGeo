@@ -34,7 +34,7 @@ These figures describe the supplied deterministic benchmark; they are not estima
 3. Add explicit target-coverage diagnostics and reject/flag partial coverage before full source totals are redistributed.
 4. Add CRS axis-unit normalization and fail-closed semantic typing for ambiguous integer-valued columns.
 5. Make sliver decisions feature-aware or use an analyst-configurable preserve/ignore policy for narrow infrastructure.
-6. Execute the newly added `test_stat13_iterative_condition_precheck_only()` regression test for the three-predictor STAT-13 path. It is present on the revision branch but has not yet been run.
+6. Execute the two new regression tests: `test_stat13_iterative_condition_precheck_only()` (three-predictor pre-check) and `test_missing_crs_is_rejected_not_assumed_wgs84()` (unknown CRS is rejected). Both are present on the revision branch but have not yet been run.
 7. Rebuild the Overleaf/PDF bundle from the revised branch and inspect every rendered page before submission.
 
 ## Venue guidance
