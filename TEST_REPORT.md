@@ -1,4 +1,6 @@
-# Independent Test and Validation Report
+# Test and Validation Record
+
+**Scope note:** This document records the repository's previously reported Windows test run; the tests were not re-executed during the Submission 6 manuscript review. The checked `tests/test_verigeo.py` currently contains eight tests.
 
 ## 1. Automated Test Suite Execution
 - **Command**: `pytest -v d:\VeriGeo\tests`
@@ -22,10 +24,11 @@
    - Bowtie self-intersection repaired via `make_valid`.
    - Overlay sliver with width $< 1.0\text{ m}$ pruned.
    - Legitimate parcel retained.
-5. `test_axiom4_spatial_statistics_island_and_collinearity_healing`: PASSED
-   - `NaN` imputed with spatial median.
-   - Queen contiguity island healed via metric $k$-NN fallback.
-   - Multicollinear predictor pruned with ridge regularization enabled.
+5. `test_axiom4_spatial_statistics_island_and_collinearity_healing`: PASSED (two-predictor pre-check case)
+   - `NaN` in the target column imputed with the global median.
+   - Queen-contiguity island repaired via the configured k-NN fallback.
+   - One of two collinear predictors pruned and a ridge parameter recorded.
+   - This test does not fit a GWR estimator and does not cover the three-predictor STAT-13 case.
 6. `test_service_middleware_and_verified_dag_executor`: PASSED
    - Multi-node DAG (spatial join $\to$ buffer) executed with Merkle root hash verification.
 7. `test_tool_handler_verify_and_heal`: PASSED
@@ -49,3 +52,11 @@ Evaluated on $4 \to 2$ incongruent polygon transfer (analytical uniform area-wei
   - $35$ iters: $Z_1 = 7000.00, Z_2 = 3000.00$, Sum $= 10000.0000$
 
 **Finding**: Mass is 100.0000% conserved across all grid resolutions and iteration counts. Finer grids converge toward exact analytical polygon boundaries with smooth intra-zone density modulation.
+
+
+## 3. Validation gaps identified in Submission 6 review
+
+- The checked test file does not contain the previously cited \`test_gwr_iterative_multicollinearity_pruning()\`; do not claim that test passed.
+- The current eight-test record does not independently validate STAT-13 iterative pruning with three mutually collinear predictors.
+- The benchmark's 15/15 STAT pass rate is based on finite Moran-style outputs, zero island rows, and a design-matrix condition-number check. It is not a GWR/LISA/Getis-Ord model-fit or permutation-inference result.
+- No new pytest run or LaTeX compilation was performed as part of this review. Re-run the test suite and rebuild/render the Overleaf bundle after applying the next code and manuscript changes.
