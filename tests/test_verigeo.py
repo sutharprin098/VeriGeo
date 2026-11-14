@@ -257,3 +257,43 @@ def test_disabled_axioms_ablation_and_sliver_rules() -> None:
     assert crs_ax.status == "NOT_APPLICABLE"
     assert res_gdf.crs.is_geographic is True
 
+def test_stat13_iterative_condition_precheck_only() -> None:
+    """Verify iterative pruning resolves a 3-predictor condition check, not a GWR fit."""
+    n = 16
+    polys = [
+        box((i % 4) * 1000.0, (i // 4) * 1000.0,
+            (i % 4 + 1) * 1000.0, (i // 4 + 1) * 1000.0)
+        for i in range(n)
+    ]
+    x1 = np.arange(n, dtype=float)
+    x2 = 2.0 * x1 + np.sin(x1) * 1e-4
+    x3 = -1.5 * x1 + np.cos(x1) * 1e-4
+    rate = 10.0 + 0.25 * x1 + np.sin(x1)
+
+    gdf = gpd.GeoDataFrame(
+        {"rate": rate, "x1": x1, "x2": x2, "x3": x3},
+        geometry=polys,
+        crs="EPSG:32618",
+    )
+    verifier = NeuroSymbolicGeoVerifier(auto_heal=True)
+    result, spc = verifier.verify_and_execute(
+        operator="gwr",
+        primary_gdf=gdf,
+        parameters={
+            "column": "rate",
+            "weights": "queen",
+            "predictors": ["x1", "x2", "x3"],
+        },
+    )
+
+    stat_ax = next(a for a in spc.axiom_results if a.axiom_id == "A_STAT")
+    assert stat_ax.status == "AUTO_REPAIRED"
+    assert stat_ax.post_condition_met is True
+    assert stat_ax.metrics["design_matrix_condition_number"] <= 30.0
+    assert len(result.attrs["predictors_used"]) == 1
+
+    # The current shared statistics executor returns Moran-style diagnostics.
+    # This test intentionally verifies the pre-check only; it does not assert a GWR fit.
+    assert "global_moran_i" in result.columns
+    assert "local_moran_i" in result.columns
+
