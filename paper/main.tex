@@ -6,6 +6,7 @@
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{multirow}
+\usepackage{array}
 \usepackage[numbers,sort&compress]{natbib}
 \usepackage{microtype}
 \usepackage{hyperref}
@@ -22,8 +23,11 @@
   columnsep=7mm
 }
 
-\setlength{\emergencystretch}{2em}
+\setlength{\emergencystretch}{3em}
 \sloppy
+\hbadness=10000
+\vbadness=10000
+\hfuzz=1pt
 
 \hypersetup{
   colorlinks=true,
@@ -106,7 +110,7 @@ The main contributions of this work are:
 
 We represent a single geoprocessing step as $W = (\text{op}, \mathcal{L}_1, \mathcal{L}_2, \Theta)$, where $\text{op}$ is the operator name, $\mathcal{L}_1 = (\mathcal{G}_1, \mathcal{X}_1, \text{CRS}_1)$ is the primary vector layer with geometries $\mathcal{G}_1 = \{g_1, \dots, g_M\}$, attribute table $\mathcal{X}_1$, and coordinate reference system $\text{CRS}_1$, $\mathcal{L}_2$ is an optional secondary layer, and $\Theta$ is the dictionary of operator parameters.
 
-\subsection{Axiom 1: Metric and Geodesic CRS Invariant ($\mathcal{A}_{\text{CRS}}$)}
+\subsection{Axiom 1: Metric and Geodesic CRS Invariant (\texorpdfstring{$\mathcal{A}_{\text{CRS}}$}{A\_CRS})}
 
 \begin{axiom}[$\mathcal{A}_{\text{CRS}}$]
 \label{ax:crs}
@@ -128,9 +132,9 @@ Let $\mathcal{O}_{\text{metric}}$ be the set of operators that compute Euclidean
     \text{EPSG}:(32700 + Z) & \text{if } \neg E_{\text{area}} \land \phi_c < 0,
   \end{cases}
 \end{equation}
-where $Z = \lfloor (\lambda_c + 180)/6 \rfloor + 1 \in \{1,\dots,60\}$ is the local UTM zone.
+where $Z = \lfloor (\lambda_c + 180)/6 \rfloor + 1$ ($Z \in \{1,\dots,60\}$) is the local UTM zone.
 
-\subsection{Axiom 2: Semantic Scale Type and MAUP Mass Conservation ($\mathcal{A}_{\text{MAUP}}$)}
+\subsection{Axiom 2: Semantic Scale Type and MAUP Mass Conservation (\texorpdfstring{$\mathcal{A}_{\text{MAUP}}$}{A\_MAUP})}
 
 The classifier $\tau(X_k) \in \{\tau_{\text{ext}}, \tau_{\text{int}}, \tau_{\text{nom}}\}$ assigns each column in $\mathcal{X}_1$ to one of three types using lexical pattern matching followed by value-range inspection (\texttt{verigeo/\allowbreak protocol.py}, lines 115--242):
 \begin{itemize}
@@ -178,7 +182,7 @@ For every $s \in \mathcal{S}_{\text{cov}}$, $\sum_{t=1}^K w_{s,t} > 0$. Summing 
 For any intensive variable $Z_k$, the weights $\alpha_{s,t} = a_{s,t} / \sum_{s'=1}^M a_{s',t}$ satisfy $\alpha_{s,t} \ge 0$ and $\sum_{s=1}^M \alpha_{s,t} = 1$, so $\hat{Z}_{t,k} = \sum_{s=1}^M \alpha_{s,t} Z_{s,k} \in [\min_s Z_{s,k}, \max_s Z_{s,k}]$.
 \end{proof}
 
-\subsection{Axiom 3: Topological 9-Intersection and Mean-Width Sliver Invariant ($\mathcal{A}_{\text{Topo}}$)}
+\subsection{Axiom 3: Topological 9-Intersection and Mean-Width Sliver Invariant (\texorpdfstring{$\mathcal{A}_{\text{Topo}}$}{A\_Topo})}
 
 \begin{axiom}[$\mathcal{A}_{\text{Topo}}$]
 \label{ax:topo}
@@ -191,7 +195,7 @@ and satisfy either the Polsby-Popper compactness threshold $\text{PP}(g) = 4\pi 
 
 When $\mathcal{A}_{\text{Topo}}$ fails on input layers, $\mathcal{R}_{\text{Topo}}$ drops empty geometries and calls \texttt{shapely.\allowbreak validation.\allowbreak make\_valid(g)} to split self-intersecting bowtie rings into valid multi-polygons. After an overlay operation, we compare two sliver-pruning rules in projected meters: our v1 rule (\texttt{ns\_vgp\_v1}, \texttt{sliver\_rule=\allowbreak "pp\_relative"}), which prunes polygons only when both $\text{PP}(g) < 0.005$ and $A(g) < 10^{-4}\overline{A}(\mathcal{G})$, and our default v2 rule (\texttt{ns\_vgp}, \texttt{sliver\_rule=\allowbreak "mean\_width"}), which prunes any strip with $W_{\text{mean}}(g) = 2A(g)/P(g) < 1.0\text{ m}$. For a narrow boundary sliver of length $L$ and width $w \ll L$, $2A/P \approx 2(Lw)/(2L) = w$, providing a scale-invariant estimate of physical strip width.
 
-\subsection{Axiom 4: Spatial Statistical Pre-Conditions ($\mathcal{A}_{\text{Stat}}$)}
+\subsection{Axiom 4: Spatial Statistical Pre-Conditions (\texorpdfstring{$\mathcal{A}_{\text{Stat}}$}{A\_Stat})}
 
 \begin{axiom}[$\mathcal{A}_{\text{Stat}}$]
 \label{ax:stat}
@@ -289,7 +293,7 @@ Pass/fail outcomes are determined by an external evaluator in \texttt{benchmarks
 \caption{Granular task-level validation records from \texttt{benchmarks/per\_task\_validation\_log.csv} showing exact numerical measurements against independent ground truth.}
 \label{tab:granular_tasks}
 \resizebox{\textwidth}{!}{%
-\begin{tabular}{llp{4.6cm}p{4.8cm}cc}
+\begin{tabular}{ll>{\raggedright\arraybackslash}p{4.8cm}>{\raggedright\arraybackslash}p{5.0cm}cc}
 \toprule
 \textbf{Task ID} & \textbf{Operator} & \textbf{Unverified Output (\texttt{naive} / \texttt{naive\_pre})} & \textbf{NS-VGP (\texttt{ns\_vgp}) Output \& Repair Trace} & \textbf{Error ($\to$ After)} & \textbf{Latency (ms)} \\
 \midrule
