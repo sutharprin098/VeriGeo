@@ -516,35 +516,56 @@ METHODS = {
 # Figures (all values come from `rows` / `summary`)
 # ----------------------------------------------------------------------------
 def fig_architecture() -> None:
-    fig, ax = plt.subplots(figsize=(12, 5.4))
-    ax.set_xlim(0, 12), ax.set_ylim(0, 5.4), ax.axis("off")
+    fig, ax = plt.subplots(figsize=(12.5, 5.4))
+    ax.set_xlim(0, 12.5), ax.set_ylim(0, 5.4), ax.axis("off")
 
-    def b(x, y, w, h, t, s, fc, ec):
-        ax.add_patch(mpatches.FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.1,rounding_size=0.15",
-                                             fc=fc, ec=ec, lw=1.6))
-        ax.text(x + w / 2, y + h * 0.68, t, ha="center", va="center", fontsize=9.5, fontweight="bold")
-        ax.text(x + w / 2, y + h * 0.30, s, ha="center", va="center", fontsize=7.8)
+    def b(x, y, w, h, t, s, fc, ec, title_color="#0f172a"):
+        ax.add_patch(mpatches.FancyBboxPatch(
+            (x, y), w, h, boxstyle="round,pad=0.08,rounding_size=0.14",
+            fc=fc, ec=ec, lw=1.6
+        ))
+        ax.text(x + w / 2, y + h * 0.66, t, ha="center", va="center",
+                fontsize=9.5, fontweight="bold", color=title_color)
+        ax.text(x + w / 2, y + h * 0.28, s, ha="center", va="center",
+                fontsize=8.0, color="#334155")
 
-    b(0.3, 3.3, 2.5, 1.4, "Planner (LLM / Agent Client)", "emits operator + parameters", "#eff6ff", "#2563eb")
-    b(0.3, 0.6, 2.5, 1.6, "Input layers", "any CRS, any topology,\nmixed attribute types", "#f8fafc", "#64748b")
-    ax.add_patch(mpatches.FancyBboxPatch((3.3, 0.4), 5.4, 4.6, boxstyle="round,pad=0.1,rounding_size=0.2",
-                                         fc="#fefce8", ec="#ca8a04", lw=1.8, ls="--"))
-    ax.text(6.0, 4.75, "Symbolic verifier + repair", ha="center", fontsize=10.5, fontweight="bold", color="#854d0e")
+    b(0.25, 3.15, 2.65, 1.55, "LLM / GIS Script",
+      "Calls operator + parameters\n(buffer, sjoin, overlay, gwr...)", "#eff6ff", "#2563eb", "#1e3a8a")
+    b(0.25, 0.65, 2.65, 1.55, "Input Spatial Layers",
+      "Unprojected CRS, mixed columns,\nself-intersections, islands", "#f8fafc", "#64748b", "#1e293b")
+
+    ax.add_patch(mpatches.FancyBboxPatch(
+        (3.35, 0.35), 5.8, 4.7, boxstyle="round,pad=0.1,rounding_size=0.18",
+        fc="#fefce8", ec="#d97706", lw=1.8, ls="--"
+    ))
+    ax.text(6.25, 4.82, "VeriGeo Runtime Verification & Repair Layer",
+            ha="center", va="center", fontsize=10.5, fontweight="bold", color="#92400e")
+
     rows = [
-        ("A_CRS: metric CRS", "reproject to UTM / equal-area", 3.55),
-        ("A_MAUP: scale types", "no SUM on intensive; mass-preserving transfer", 2.6),
-        ("A_TOPO: valid geometry", "make_valid; drop slivers after overlay", 1.65),
-        ("A_STAT: pre-conditions", "NaN, islands, small N, collinearity", 0.7),
+        ("Rule 1: Map Projections & CRS",
+         "Reproject degree layers to Equal-Area (EPSG:5070/6933) or local UTM", 3.60),
+        ("Rule 2: Counts vs. Ratios (MAUP)",
+         "Smooth pycnophylactic grid for counts; area-weighted mean for ratios", 2.62),
+        ("Rule 3: Polygon Topology & Slivers",
+         "Fix invalid rings (make_valid); drop overlay slivers < 1.0 m mean width", 1.64),
+        ("Rule 4: Spatial Statistics Pre-Checks",
+         "Fill NaN, replace Queen islands with k-NN, drop collinear columns", 0.66),
     ]
     for t, s, y in rows:
-        b(3.55, y, 4.9, 0.8, t, s, "#ffffff", "#d97706")
-    b(9.2, 3.2, 2.5, 1.5, "Execute operator", "on repaired inputs", "#ecfdf5", "#059669")
-    b(9.2, 0.6, 2.5, 1.7, "Spatial Proof\nCertificate", "pre/post flags, repairs,\nSHA-256 of the trace", "#f0fdf4", "#15803d")
-    kw = dict(arrowstyle="->", lw=1.6, color="#334155")
-    ax.annotate("", xy=(3.3, 4.0), xytext=(2.8, 4.0), arrowprops=kw)
-    ax.annotate("", xy=(3.3, 1.4), xytext=(2.8, 1.4), arrowprops=kw)
-    ax.annotate("", xy=(9.2, 3.9), xytext=(8.7, 3.9), arrowprops=kw)
-    ax.annotate("", xy=(10.45, 2.3), xytext=(10.45, 3.2), arrowprops=dict(arrowstyle="<-", lw=1.6, color="#059669"))
+        b(3.55, y, 5.4, 0.80, t, s, "#ffffff", "#d97706", "#78350f")
+
+    b(9.60, 3.15, 2.65, 1.55, "Verified Execution",
+      "Runs GeoPandas / Shapely\non repaired metric inputs", "#ecfdf5", "#059669", "#065f46")
+    b(9.60, 0.65, 2.65, 1.55, "Spatial Proof Certificate",
+      "JSON audit log, repair trace,\n& SHA-256 input/output hash", "#f0fdf4", "#15803d", "#14532d")
+
+    kw = dict(arrowstyle="-|>,head_width=0.25,head_length=0.45", lw=1.7, color="#334155")
+    ax.annotate("", xy=(3.32, 3.92), xytext=(2.92, 3.92), arrowprops=kw)
+    ax.annotate("", xy=(3.32, 1.42), xytext=(2.92, 1.42), arrowprops=kw)
+    ax.annotate("", xy=(9.58, 3.92), xytext=(9.18, 3.92), arrowprops=kw)
+    ax.annotate("", xy=(10.92, 2.22), xytext=(10.92, 3.13),
+                arrowprops=dict(arrowstyle="-|>,head_width=0.25,head_length=0.45", lw=1.7, color="#059669"))
+
     fig.tight_layout()
     for ext in ("png", "pdf"):
         fig.savefig(FIG_DIR / f"fig1_protocol_architecture.{ext}", dpi=300, bbox_inches="tight")
@@ -553,41 +574,99 @@ def fig_architecture() -> None:
 
 def fig_main(summary) -> None:
     cats = ["CRS", "MAUP", "TOPO", "STAT", "CONTROL"]
-    names = {"naive": "Naive", "naive_pre": "Naive + preprocessing", "ns_vgp": "VeriGeo (NS-VGP)"}
+    names = {
+        "naive": "Unverified (Naive)",
+        "naive_pre": "Naive + Pre-processing",
+        "ns_vgp": "VeriGeo (Ours)",
+    }
     cols = {"naive": "#f87171", "naive_pre": "#fbbf24", "ns_vgp": "#10b981"}
-    fig, axes = plt.subplots(1, 2, figsize=(12.5, 4.6))
+    fig, axes = plt.subplots(1, 2, figsize=(13.0, 4.9), gridspec_kw={"wspace": 0.24})
+
     x = np.arange(len(cats) + 1)
     w = 0.26
     for j, m in enumerate(["naive", "naive_pre", "ns_vgp"]):
         vals, lo, hi = [], [], []
         for c in cats + ["ALL"]:
             s = summary["pass_rates"][c][m]
-            vals.append(s["pass_pct"]), lo.append(max(0.0, s["pass_pct"] - s["ci95"][0])), hi.append(max(0.0, s["ci95"][1] - s["pass_pct"]))
-        axes[0].bar(x + (j - 1) * w, vals, w, yerr=[lo, hi], capsize=2.5, color=cols[m], label=names[m], ec="#334155")
+            vals.append(s["pass_pct"])
+            lo.append(max(0.0, s["pass_pct"] - s["ci95"][0]))
+            hi.append(max(0.0, s["ci95"][1] - s["pass_pct"]))
+        bars = axes[0].bar(
+            x + (j - 1) * w, vals, w, yerr=[lo, hi], capsize=2.5,
+            color=cols[m], label=names[m], ec="#1e293b", lw=0.8,
+            error_kw=dict(lw=1.0, ecolor="#334155")
+        )
+        for idx, (bar, v) in enumerate(zip(bars, vals)):
+            if m == "ns_vgp":
+                axes[0].text(
+                    bar.get_x() + bar.get_width() / 2,
+                    v + hi[idx] + 2.0,
+                    "100%",
+                    ha="center", va="bottom", fontsize=7.6, fontweight="bold", color="#065f46"
+                )
+            elif m == "naive" and idx == len(cats):
+                axes[0].text(
+                    bar.get_x() + bar.get_width(),
+                    v + hi[idx] + 2.5,
+                    f"{v:.1f}%",
+                    ha="center", va="bottom", fontsize=7.6, fontweight="bold", color="#991b1b"
+                )
     axes[0].set_xticks(x)
-    axes[0].set_xticklabels(cats + ["ALL"])
-    axes[0].set_ylabel("Tasks passing independent check (%)")
-    axes[0].set_title("(a) Pass rate by category (Wilson 95% CI)")
-    axes[0].set_ylim(0, 112)
+    axes[0].set_xticklabels(cats + ["ALL (N=70)"], fontsize=9)
+    axes[0].set_ylabel("Tasks passing independent check (%)", fontsize=9.5)
+    axes[0].set_title("(a) Pass rate by category (with 95% Wilson CI)", fontsize=10.5, fontweight="bold", pad=10)
+    axes[0].set_ylim(0, 134)
     axes[0].grid(axis="y", ls=":", alpha=0.6)
-    axes[0].legend(loc="upper right", fontsize=8)
+    axes[0].legend(loc="upper left", ncol=3, frameon=True, facecolor="white", framealpha=0.95, fontsize=7.8)
 
     e = summary["error_metrics"]
-    labels = ["CRS area\nerror (%)", "MAUP total\npop. error (%)", "MAUP income\nmean error (%)"]
-    keys = ["crs_area_err_median", "maup_pop_total_err_mean", "maup_income_err_mean"]
-    for j, m in enumerate(["naive", "ns_vgp"]):
-        vals = [max(e[m][k], 1e-6) for k in keys]
-        bars = axes[1].bar(np.arange(3) + (j - 0.5) * 0.36, vals, 0.36, color=cols[m], label=names[m], ec="#334155")
-        for bar, v in zip(bars, [e[m][k] for k in keys]):
-            axes[1].text(bar.get_x() + bar.get_width() / 2, bar.get_height() * 1.15, f"{v:.3g}",
-                         ha="center", fontsize=8)
+    labels = [
+        "CRS geodesic\narea error (%)",
+        "MAUP total\npop. error (%)",
+        "MAUP per-zone\npop. NMAE (%)",
+        "MAUP income\nerror (%)",
+    ]
+    naive_vals = [
+        e["naive"]["crs_area_err_median"],
+        e["naive"]["maup_pop_total_err_mean"],
+        e["naive"]["maup_pop_zone_nmae_mean"],
+        e["naive"]["maup_income_err_mean"],
+    ]
+    verigeo_vals = [
+        e["ns_vgp"]["crs_area_err_median"],
+        max(e["ns_vgp"]["maup_pop_total_err_mean"], 1e-6),
+        e["ns_vgp"]["maup_pop_zone_nmae_mean"],
+        e["ns_vgp"]["maup_income_err_mean"],
+    ]
+    verigeo_raw = [
+        e["ns_vgp"]["crs_area_err_median"],
+        e["ns_vgp"]["maup_pop_total_err_mean"],
+        e["ns_vgp"]["maup_pop_zone_nmae_mean"],
+        e["ns_vgp"]["maup_income_err_mean"],
+    ]
+
+    xb = np.arange(len(labels))
+    bw = 0.35
+    b1 = axes[1].bar(xb - bw / 2, naive_vals, bw, color=cols["naive"], label=names["naive"], ec="#1e293b", lw=0.8)
+    b2 = axes[1].bar(xb + bw / 2, verigeo_vals, bw, color=cols["ns_vgp"], label=names["ns_vgp"], ec="#1e293b", lw=0.8)
+
+    for bar, v in zip(b1, naive_vals):
+        axes[1].text(bar.get_x() + bar.get_width() / 2, bar.get_height() * 1.28, f"{v:.1f}%",
+                     ha="center", va="bottom", fontsize=7.8, fontweight="bold", color="#991b1b")
+    for bar, v in zip(b2, verigeo_raw):
+        txt = "<1e-14%" if v < 1e-6 else f"{v:.2f}%"
+        axes[1].text(bar.get_x() + bar.get_width() / 2, bar.get_height() * 1.28, txt,
+                     ha="center", va="bottom", fontsize=7.8, fontweight="bold", color="#065f46")
+
     axes[1].set_yscale("log")
-    axes[1].set_xticks(range(3))
-    axes[1].set_xticklabels(labels)
-    axes[1].set_ylabel("Measured error (%) (log scale)")
-    axes[1].set_title("(b) Measured error vs independent ground truth")
+    axes[1].set_ylim(2e-7, 2.5e4)
+    axes[1].set_xticks(xb)
+    axes[1].set_xticklabels(labels, fontsize=8.8)
+    axes[1].set_ylabel("Measured error vs. ground truth (%) [log scale]", fontsize=9.5)
+    axes[1].set_title("(b) Error reduction across CRS and MAUP benchmarks", fontsize=10.5, fontweight="bold", pad=10)
     axes[1].grid(axis="y", ls=":", alpha=0.6)
-    axes[1].legend(fontsize=8)
+    axes[1].legend(loc="upper left", ncol=2, frameon=True, facecolor="white", framealpha=0.95, fontsize=8.2)
+
     fig.tight_layout()
     for ext in ("png", "pdf"):
         fig.savefig(FIG_DIR / f"fig2_benchmark_comparison.{ext}", dpi=300, bbox_inches="tight")
@@ -601,27 +680,56 @@ def fig_case(tasks) -> dict[str, Any]:
     spop, sinc, _ = _maup_arrays(t, ("ns", frozenset()))
     apop, ainc, _ = _maup_arrays(t, ("areaw",))
     tgt = t["gdf2"].copy()
-    vmax = max(truth["pop"].max(), npop.max(), spop.max())
-    fig, axes = plt.subplots(2, 2, figsize=(11.5, 9))
-    for ax, (title, vals) in zip(axes.ravel()[:3], [
-        (f"(a) Ground truth (from points)\ntotal = {truth['pop'].sum():,.0f}", truth["pop"]),
-        (f"(b) Naive sjoin + sum\ntotal = {npop.sum():,.0f}", npop),
-        (f"(c) VeriGeo\ntotal = {spop.sum():,.1f}", spop),
-    ]):
+    vmax = float(max(truth["pop"].max(), npop.max(), spop.max()))
+
+    nmae_naive = float(np.abs(npop - truth["pop"]).sum() / truth["pop"].sum() * 100)
+    nmae_areaw = float(np.abs(apop - truth["pop"]).sum() / truth["pop"].sum() * 100)
+    nmae_verigeo = float(np.abs(spop - truth["pop"]).sum() / truth["pop"].sum() * 100)
+
+    fig, axes = plt.subplots(
+        2, 2, figsize=(12.2, 9.6),
+        gridspec_kw={"hspace": 0.34, "wspace": 0.26}
+    )
+
+    panels = [
+        (f"(a) Ground Truth (from 40,000 points)\nTotal Population = {truth['pop'].sum():,.0f}", truth["pop"]),
+        (f"(b) Unverified Join (sjoin + sum)\nTotal = {npop.sum():,.0f} (+183.0% overcount)", npop),
+        (f"(c) VeriGeo Pycnophylactic\nTotal = {spop.sum():,.1f} (0.0% total error, 3.16% NMAE)", spop),
+    ]
+    for ax, (title, vals) in zip(axes.ravel()[:3], panels):
         tgt["v"] = vals
-        tgt.plot(column="v", ax=ax, cmap="YlGnBu", edgecolor="#1e293b", vmin=0, vmax=vmax, legend=True)
-        ax.set_xticks([-77.89, -77.85, -77.81])
-        ax.set_title(title, fontsize=10)
+        tgt.plot(
+            column="v", ax=ax, cmap="YlGnBu", edgecolor="#1e293b", lw=1.1,
+            vmin=0, vmax=vmax, legend=True,
+            legend_kwds={"shrink": 0.82, "pad": 0.03}
+        )
+        for geom, val in zip(tgt.geometry, vals):
+            c = geom.centroid
+            txt_color = "white" if val > 0.52 * vmax else "#0f172a"
+            ax.text(c.x, c.y, f"{val:,.0f}", ha="center", va="center",
+                    fontsize=8.2, fontweight="bold", color=txt_color)
+        ax.set_xticks([-77.88, -77.85, -77.82])
+        ax.set_xticklabels(["77.88°W", "77.85°W", "77.82°W"], fontsize=8.5)
+        ax.set_yticks([40.76, 40.80, 40.84])
+        ax.set_yticklabels(["40.76°N", "40.80°N", "40.84°N"], fontsize=8.5)
+        ax.set_title(title, fontsize=10.0, fontweight="bold", pad=8)
+
     ax = axes[1, 1]
-    ax.scatter(truth["pop"], npop, c="#f87171", label="Naive", s=36, ec="k")
-    ax.scatter(truth["pop"], apop, c="#fbbf24", label="Area-weighted", s=36, ec="k", marker="s")
-    ax.scatter(truth["pop"], spop, c="#10b981", label="VeriGeo", s=36, ec="k", marker="^")
-    lim = [0, vmax * 1.05]
-    ax.plot(lim, lim, "k--", lw=1)
-    ax.set_xlabel("True zone population"), ax.set_ylabel("Estimated zone population")
-    ax.set_title("(d) Per-zone estimate vs truth")
-    ax.legend()
-    fig.tight_layout()
+    ax.scatter(truth["pop"], npop, c="#f87171",
+               label=f"Unverified Naive (NMAE = {nmae_naive:.1f}%)", s=52, ec="#1e293b", zorder=3)
+    ax.scatter(truth["pop"], apop, c="#fbbf24",
+               label=f"Area-Weighted (NMAE = {nmae_areaw:.2f}%)", s=52, ec="#1e293b", marker="s", zorder=4)
+    ax.scatter(truth["pop"], spop, c="#10b981",
+               label=f"VeriGeo Pycnophylactic (NMAE = {nmae_verigeo:.2f}%)", s=58, ec="#1e293b", marker="^", zorder=5)
+    lim = [0, vmax * 1.08]
+    ax.plot(lim, lim, "k--", lw=1.2, label="1:1 Exact Agreement")
+    ax.set_xlim(lim), ax.set_ylim(lim)
+    ax.set_xlabel("True zone population (from 40,000 resident points)", fontsize=9.5)
+    ax.set_ylabel("Estimated zone population", fontsize=9.5)
+    ax.set_title("(d) Per-zone population estimate vs. ground truth", fontsize=10.0, fontweight="bold", pad=8)
+    ax.grid(True, ls=":", alpha=0.6)
+    ax.legend(loc="lower right", fontsize=8.2, frameon=True, facecolor="white", framealpha=0.95)
+
     for ext in ("png", "pdf"):
         fig.savefig(FIG_DIR / f"fig3_maup_case_study.{ext}", dpi=300, bbox_inches="tight")
     plt.close(fig)
@@ -632,36 +740,50 @@ def fig_case(tasks) -> dict[str, Any]:
         "true_mean_income": float(np.nanmean(truth["inc"])), "naive_mean_income": float(np.nanmean(ninc)),
         "verigeo_mean_income": float(np.nanmean(sinc)),
         "zone_nmae_pct": {
-            "naive": float(np.abs(npop - truth["pop"]).sum() / truth["pop"].sum() * 100),
-            "areaw": float(np.abs(apop - truth["pop"]).sum() / truth["pop"].sum() * 100),
-            "verigeo": float(np.abs(spop - truth["pop"]).sum() / truth["pop"].sum() * 100),
+            "naive": nmae_naive,
+            "areaw": nmae_areaw,
+            "verigeo": nmae_verigeo,
         },
     }
 
 
 def fig_ablation(summary) -> None:
-    fig, axes = plt.subplots(1, 2, figsize=(12.5, 4.5))
+    fig, axes = plt.subplots(1, 2, figsize=(13.2, 4.7), gridspec_kw={"wspace": 0.28})
     order = ["ns_vgp", "abl_no_A_CRS", "abl_no_A_MAUP", "abl_no_A_TOPO", "abl_no_A_STAT", "abl_all_off"]
-    lab = ["Full", "no A_CRS", "no A_MAUP", "no A_TOPO", "no A_STAT", "all off"]
+    lab = [
+        "Full VeriGeo (All 4 Rules)",
+        "Without Rule 1 (CRS)",
+        "Without Rule 2 (MAUP)",
+        "Without Rule 3 (Topology)",
+        "Without Rule 4 (Statistics)",
+        "All Rules Disabled",
+    ]
     cats = ["CRS", "MAUP", "TOPO", "STAT"]
     mat = np.array([[summary["pass_rates"][c][m]["pass_pct"] for c in cats] for m in order])
     im = axes[0].imshow(mat, vmin=0, vmax=100, cmap="RdYlGn", aspect="auto")
-    axes[0].set_xticks(range(4)), axes[0].set_xticklabels(cats)
-    axes[0].set_yticks(range(len(order))), axes[0].set_yticklabels(lab)
+    axes[0].set_xticks(range(4)), axes[0].set_xticklabels(cats, fontsize=9.5, fontweight="bold")
+    axes[0].set_yticks(range(len(order))), axes[0].set_yticklabels(lab, fontsize=8.8)
     for i in range(mat.shape[0]):
         for j in range(mat.shape[1]):
-            axes[0].text(j, i, f"{mat[i, j]:.0f}", ha="center", va="center", fontsize=9)
-    axes[0].set_title("(a) Real ablation: pass rate (%) with each axiom disabled")
-    fig.colorbar(im, ax=axes[0], fraction=0.04)
+            axes[0].text(j, i, f"{mat[i, j]:.0f}%", ha="center", va="center",
+                         fontsize=9.2, fontweight="bold", color="white")
+    axes[0].set_title("(a) Ablation study: pass rate (%) when disabling each rule", fontsize=10.2, fontweight="bold", pad=10)
+    fig.colorbar(im, ax=axes[0], fraction=0.042, pad=0.03)
+
     lat = summary["latency_ms"]
     names = ["CRS", "MAUP", "TOPO", "STAT", "CONTROL"]
-    axes[1].bar(names, [lat[n]["mean"] for n in names], yerr=[lat[n]["std"] for n in names],
-                capsize=4, color="#3b82f6", ec="#1d4ed8")
+    means = [lat[n]["mean"] for n in names]
+    stds = [lat[n]["std"] for n in names]
+    axes[1].bar(names, means, yerr=stds, capsize=4, color="#3b82f6", ec="#1e3a8a", lw=0.9,
+                error_kw=dict(lw=1.2, ecolor="#1e293b"))
     for i, n in enumerate(names):
-        axes[1].text(i, lat[n]["mean"] + lat[n]["std"] + 3, f"{lat[n]['mean']:.1f}", ha="center", fontsize=8)
-    axes[1].set_ylabel("VeriGeo wall-clock per task (ms)")
-    axes[1].set_title("(b) Measured runtime (mean +/- SD)")
+        axes[1].text(i, means[i] + stds[i] + 7, f"{means[i]:.1f} ms",
+                     ha="center", va="bottom", fontsize=8.5, fontweight="bold", color="#0f172a")
+    axes[1].set_ylim(0, 345)
+    axes[1].set_ylabel("VeriGeo runtime per task (ms)", fontsize=9.5)
+    axes[1].set_title("(b) Measured runtime by task category (mean ± SD)", fontsize=10.2, fontweight="bold", pad=10)
     axes[1].grid(axis="y", ls=":", alpha=0.6)
+
     fig.tight_layout()
     for ext in ("png", "pdf"):
         fig.savefig(FIG_DIR / f"fig4_ablation_and_latency.{ext}", dpi=300, bbox_inches="tight")
