@@ -1398,16 +1398,30 @@ class NeuroSymbolicGeoVerifier:
                         f"Design matrix exhibits severe multicollinearity (condition number kappa={cond_number:.1f} > 30)."
                     )
                     if self.auto_heal:
-                        # Iteratively prune the most collinear predictor column
-                        corr = np.abs(np.corrcoef(X_std, rowvar=False))
-                        np.fill_diagonal(corr, 0.0)
-                        drop_idx = int(np.argmax(np.max(corr, axis=0)))
-                        dropped_col = valid_preds[drop_idx]
-                        kept_preds = [c for i, c in enumerate(valid_preds) if i != drop_idx]
-                        params["predictors"] = kept_preds
+                        # Iteratively prune collinear predictor columns until kappa <= 30 or only 1 remains
+                        dropped_cols: list[str] = []
+                        curr_preds = list(valid_preds)
+                        while len(curr_preds) > 1:
+                            X_c = gdf1[curr_preds].to_numpy(dtype=float)
+                            X_c_std = (X_c - np.mean(X_c, axis=0)) / np.clip(np.std(X_c, axis=0), 1e-9, None)
+                            try:
+                                c_num = float(np.linalg.cond(X_c_std))
+                            except Exception:
+                                c_num = 1.0
+                            if c_num <= 30.0:
+                                cond_number = c_num
+                                break
+                            corr = np.abs(np.corrcoef(X_c_std, rowvar=False))
+                            np.fill_diagonal(corr, 0.0)
+                            drop_idx = int(np.argmax(np.max(corr, axis=0)))
+                            drop_col = curr_preds.pop(drop_idx)
+                            dropped_cols.append(drop_col)
+                        if len(curr_preds) == 1:
+                            cond_number = 1.0
+                        params["predictors"] = curr_preds
                         params["ridge_lambda"] = 1e-2
                         repair_actions.append(
-                            f"Pruned collinear predictor '{dropped_col}' (kappa={cond_number:.1f}) and enabled L2 ridge regularization."
+                            f"Iteratively pruned {len(dropped_cols)} collinear predictor(s) {dropped_cols} (final kappa={cond_number:.1f}) and enabled L2 ridge regularization."
                         )
 
         metrics = {
