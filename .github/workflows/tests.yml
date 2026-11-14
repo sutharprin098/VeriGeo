@@ -1,4 +1,4 @@
-name: Python tests
+name: Validation and manuscript build
 
 on:
   push:
@@ -7,6 +7,7 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -33,3 +34,34 @@ jobs:
 
       - name: Run unit and integration tests
         run: python -m pytest -v
+
+  manuscript:
+    name: Build LaTeX manuscript and Overleaf bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Compile manuscript
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: main.tex
+          working_directory: paper
+          args: -pdf -interaction=nonstopmode -halt-on-error
+
+      - name: Package source, figures, and rendered PDF
+        working-directory: paper
+        run: |
+          test -s main.pdf
+          zip -r VeriGeo_Overleaf_Submission.zip main.tex references.bib figures main.pdf
+          test -s VeriGeo_Overleaf_Submission.zip
+
+      - name: Upload manuscript deliverables
+        uses: actions/upload-artifact@v4
+        with:
+          name: verigeo-manuscript-and-overleaf-bundle
+          path: |
+            paper/main.pdf
+            paper/VeriGeo_Overleaf_Submission.zip
+          if-no-files-found: error
