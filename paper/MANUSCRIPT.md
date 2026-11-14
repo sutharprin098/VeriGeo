@@ -52,6 +52,6 @@ The benchmark uses WGS84 ellipsoidal geodesics and local AEQD reference operatio
 
 ## 5. Reproducibility and next steps
 
-The repository contains the benchmark generator, per-task CSV, JSON summary, test suite, and figure generation scripts. The previously recorded Windows test run reports 8 passed; a ninth STAT-13 regression test has since been added but is pending execution. No fresh pytest run or LaTeX compilation was performed as part of this review.
+The repository contains the benchmark generator, per-task CSV, JSON summary, test suite, and figure generation scripts. The previously recorded Windows test run reports 8 passed; STAT-13 and missing-CRS regression tests have since been added but both are pending execution. No fresh pytest run or LaTeX compilation was performed as part of this review.
 
 Before journal submission, the next priorities are empirical census/cadastral validation, actual GWR/LISA/Getis-Ord implementations or narrowed operator claims, genuine permutation inference if claimed, partial-coverage validation, CRS axis-unit normalization, fail-closed semantic typing for ambiguous attributes, and infrastructure-aware sliver handling.
