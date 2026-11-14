@@ -3,7 +3,7 @@
 <p align="left">
   <img src="https://img.shields.io/badge/Protocol-NS--VGP%2F1.0.0-10b981?style=flat-square" alt="Protocol NS-VGP 1.0.0">
   <img src="https://img.shields.io/badge/Python-3.10%2B-2563eb?style=flat-square" alt="Python 3.10+">
-  <img src="https://img.shields.io/badge/Verified_Pass_Rate-70%2F70_(100%25)-059669?style=flat-square" alt="70/70 (100%) Verified Pass Rate">
+  <img src="https://img.shields.io/badge/Verified_Pass_Rate-66%2F70_(94.3%25)-059669?style=flat-square" alt="66/70 (94.3%) Verified Pass Rate">
   <img src="https://img.shields.io/badge/License-MIT-f59e0b?style=flat-square" alt="License MIT">
 </p>
 
@@ -47,26 +47,34 @@ Every baseline (`naive`, `naive_pre`, `areaw`), single-rule ablation, and `ns_vg
 
 | Task Category | Method | Passed ($k/N$) | Pass Rate (%) [95% Wilson CI] | Mean Area Error (%) | Total Pop Error (%) | Zone Pop NMAE (%) / Slivers | Income Ratio ($\times$) / $\kappa$ | Mean Latency ($\text{ms} \pm \text{SD}$) |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **1. CRS Distortion** ($N=15$) | `naive` | `0/15` | `0.0%` `[0.0, 20.4]` | `35.00%` (med `26.87%`) | — | — | — | `58.00 ± 166.33` |
-| | `naive_pre` | `0/15` | `0.0%` `[0.0, 20.4]` | `35.00%` (med `26.87%`) | — | — | — | `14.04 ± 8.05` |
-| | **VeriGeo (`ns_vgp`)** | **`15/15`** | **`100.0%` `[79.6, 100.0]`** | **`0.023%` (med `0.015%`)** | — | — | — | **`33.34 ± 25.81`** |
-| **2. MAUP Aggregation** ($N=15$) | `naive` | `0/15` | `0.0%` `[0.0, 20.4]` | — | `166.05%` (joins) | `166.05%` | `4.001x` | `23.76 ± 13.48` |
-| | `naive_pre` | `0/15` | `0.0%` `[0.0, 20.4]` | — | `166.05%` (joins) | `166.05%` | `4.001x` | `19.44 ± 8.51` |
-| | `areaw` ($N=10$ joins) | `10/10` | `100.0%` `[72.2, 100.0]` | — | `0.0003%` | `7.92%` | `1.001x` | `73.26 ± 33.90` |
-| | **VeriGeo (`ns_vgp`)** | **`15/15`** | **`100.0%` `[79.6, 100.0]`** | — | **`0.0000%` (`1.9e-15%`)** | **`3.62%`** | **`1.001x`** | **`189.46 ± 104.72`** |
-| **3. Topology & Slivers** ($N=15$) | `naive` | `0/15` | `0.0%` `[0.0, 20.4]` | — | — | `2.00` slivers | — | `235.47 ± 31.87` |
-| | `naive_pre` | `0/15` | `0.0%` `[0.0, 20.4]` | — | — | `2.00` slivers | — | `231.32 ± 24.49` |
-| | `ns_vgp_v1` (`pp_relative`) | `10/15` | `66.7%` `[41.7, 84.8]` | — | — | `0.47` slivers | — | `69.02 ± 20.53` |
-| | **VeriGeo (`ns_vgp`)** | **`15/15`** | **`100.0%` `[79.6, 100.0]`** | — | — | **`0.00` slivers** | — | **`66.13 ± 11.89`** |
-| **4. Spatial Statistics** ($N=15$) | `naive` | `0/15` | `0.0%` `[0.0, 20.4]` | — | — | `2` islands, `NaN` | `κ ≤ 133,728` | `7.71 ± 1.48` |
-| | `naive_pre` | `0/15` | `0.0%` `[0.0, 20.4]` | — | — | `2` islands | `κ ≤ 133,728` | `10.65 ± 1.98` |
-| | **VeriGeo (`ns_vgp`)** | **`15/15`** | **`100.0%` `[79.6, 100.0]`** | — | — | **`0` islands** | **`κ = 1.00`** | **`20.12 ± 4.50`** |
-| **5. Clean Control** ($N=10$) | `naive` | `10/10` | `100.0%` `[72.2, 100.0]` | `0.030%` | — | `0` repairs | — | `5.65 ± 5.04` |
-| | `naive_pre` | `10/10` | `100.0%` `[72.2, 100.0]` | `0.030%` | — | `0` repairs | — | `5.65 ± 5.36` |
-| | **VeriGeo (`ns_vgp`)** | **`10/10`** | **`100.0%` `[72.2, 100.0]`** | **`0.030%`** | — | **`0` repairs** | — | **`13.55 ± 3.85`** |
-| **All Tasks ($N=70$)** | `naive` | `10/70` | `14.3%` `[7.9, 24.3]` | `35.00%` | `166.05%` | `166.05%` | `4.001x` | `70.56` |
-| | `naive_pre` | `10/70` | `14.3%` `[7.9, 24.3]` | `35.00%` | `166.05%` | `166.05%` | `4.001x` | `59.97` |
-| | **VeriGeo (`ns_vgp`)** | **`70/70`** | **`100.0%` `[94.8, 100.0]`** | **`0.023%`** | **`0.0000%`** | **`3.62%`** | **`1.001x`** | **`68.16`** |
+| **1. CRS Distortion** ($N=15$) | `naive` | `0/15` | `0.0%` `[0.0, 20.4]` | `35.00%` (med `26.87%`) | — | — | — | `34.16 ± 98.41` |
+| | `naive_pre` | `0/15` | `0.0%` `[0.0, 20.4]` | `35.00%` (med `26.87%`) | — | — | — | `9.29 ± 5.24` |
+| | **VeriGeo (`ns_vgp`)** | **`15/15`** | **`100.0%` `[79.6, 100.0]`** | **`0.024%` (med `0.015%`)** | — | — | — | **`22.07 ± 12.15`** |
+| **2. MAUP Aggregation** ($N=15$) | `naive` | `0/15` | `0.0%` `[0.0, 20.4]` | — | `169.56%` (joins) | `169.56%` | `3.987x` | `15.79 ± 6.53` |
+| | `naive_pre` | `0/15` | `0.0%` `[0.0, 20.4]` | — | `169.56%` (joins) | `169.56%` | `3.987x` | `12.56 ± 3.31` |
+| | `areaw` ($N=10$ joins) | `9/10` | `90.0%` `[59.6, 98.2]` | — | `0.0002%` | `7.92%` (`12.80%` w/ `MAUP-14`) | `1.001x` | `51.82 ± 24.48` |
+| | **VeriGeo (`ns_vgp`)** | **`13/15`** | **`86.7%` `[62.1, 96.3]`** | — | **`0.0000%` (`1.9e-15%`)** | **`3.62%` (`10.10%` w/ `MAUP-14`)** | **`1.001x` (`3.89x` on `MAUP-15`)** | **`125.60 ± 59.18`** |
+| **3. Topology & Slivers** ($N=15$) | `naive` | `0/15` | `0.0%` `[0.0, 20.4]` | — | — | `1.87` slivers | — | `142.33 ± 26.82` |
+| | `naive_pre` | `0/15` | `0.0%` `[0.0, 20.4]` | — | — | `1.87` slivers | — | `134.97 ± 22.90` |
+| | `ns_vgp_v1` (`pp_relative`) | `10/15` | `66.7%` `[41.7, 84.8]` | — | — | `0.40` slivers | — | `46.50 ± 7.62` |
+| | **VeriGeo (`ns_vgp`)** | **`14/15`** | **`93.3%` `[70.2, 98.8]`** | — | — | **`0.00` slivers (`TOPO-15` canal)** | — | **`42.73 ± 4.65`** |
+| **4. Spatial Statistics** ($N=15$) | `naive` | `0/15` | `0.0%` `[0.0, 20.4]` | — | — | `2` islands, `NaN` | `κ ≤ 164,308` | `6.14 ± 2.83` |
+| | `naive_pre` | `0/15` | `0.0%` `[0.0, 20.4]` | — | — | `2` islands | `κ ≤ 164,308` | `6.66 ± 1.66` |
+| | **VeriGeo (`ns_vgp`)** | **`14/15`** | **`93.3%` `[70.2, 98.8]`** | — | — | **`0` islands** | **`κ = 1.00` (`STAT-13` `κ = 66k`)** | **`13.09 ± 3.16`** |
+| **5. Clean Control** ($N=10$) | `naive` | `10/10` | `100.0%` `[72.2, 100.0]` | `0.030%` | — | `0` repairs | — | `3.50 ± 3.24` |
+| | `naive_pre` | `10/10` | `100.0%` `[72.2, 100.0]` | `0.030%` | — | `0` repairs | — | `3.46 ± 3.40` |
+| | **VeriGeo (`ns_vgp`)** | **`10/10`** | **`100.0%` `[72.2, 100.0]`** | **`0.030%`** | — | **`0` repairs** | — | **`8.20 ± 1.98`** |
+| **All Tasks ($N=70$)** | `naive` | `10/70` | `14.3%` `[7.9, 24.3]` | `35.00%` | `169.56%` | `169.56%` | `3.987x` | `43.02` |
+| | `naive_pre` | `10/70` | `14.3%` `[7.9, 24.3]` | `35.00%` | `169.56%` | `169.56%` | `3.987x` | `35.51` |
+| | **VeriGeo (`ns_vgp`)** | **`66/70`** | **`94.3%` `[86.2, 97.8]`** | **`0.024%`** | **`0.0000%`** | **`3.62%` (`10.10%` all)** | **`1.001x`** | **`44.35`** |
+
+### Documented Edge Cases (`4/70` Failures)
+
+To evaluate where rule-based verification reaches its limits, the benchmark includes four hard stress-test cases where VeriGeo fails the ground-truth threshold:
+1. **`MAUP-14` (Unmasked Coastal Water Barrier):** When `92%` of residents live on the western shore of an unmasked river/harbor (`x < -77.848`), smooth pycnophylactic interpolation diffuses population across the water boundary into eastern zones (`66.46%` zone NMAE, though total count is still conserved to `0.0000%`).
+2. **`MAUP-15` (Opaque Column Naming `attr_val`):** When median household income is stored as integer dollars (`38,500–92,000`) under the generic column name `attr_val`, lexical + value-range typing misclassifies it as an additive count and sums it across dissolved districts (`3.893x` inflation).
+3. **`TOPO-15` (Narrow Infrastructure Feature `0.80 m`):** When intersecting a `0.80 m`-wide utility canal with a parcel grid, the fixed `mean_width < 1.0 m` sliver filter removes the canal segment (`67.57%` area retained).
+4. **`STAT-13` (Three Mutually Collinear Predictors):** When three predictors are mutually collinear (`x2 ≈ x1` and `x3 ≈ x1 + x2`), single-pass collinearity pruning drops one column (`κ` drops from `164,308.0` to `66,186.9`), leaving the remaining pair collinear (`κ > 30`).
 
 ---
 

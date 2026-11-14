@@ -11,7 +11,7 @@
 
 ## Abstract
 
-Automated GIS tools use large language models to write and run Python scripts for spatial analysis, treating any script that exits with code `0` as successful. Because GeoPandas and Shapely allow invalid cartographic and statistical operations without raising exceptions, scripts that finish cleanly still frequently produce wrong results: buffers and areas are computed on unprojected latitude-longitude degrees (`EPSG:4326`), spatial joins double-count populations across zone boundaries while summing ratio columns such as median income, polygon overlays leave narrow boundary slivers, and spatial regressions run on disconnected contiguity graphs or collinear predictors. We present **VeriGeo (NS-VGP 1.0)**, a runtime verification layer in Python that checks and repairs four conditions around each spatial operation: metric and equal-area projections, count versus ratio handling via Tobler's pycnophylactic interpolation and area-weighted averaging, polygon ring validity and sliver removal ($2 \times \text{Area}/\text{Perimeter} < 1.0\text{ m}$), and spatial regression pre-checks. Each run outputs a JSON **Spatial Proof Certificate (SPC)** with a SHA-256 hash of the inputs and outputs. Across 70 benchmark tasks (60 fault-injected and 10 clean control tasks, 535 runs) scored by an independent ground-truth evaluator, unverified GeoPandas scripts passed `10/70` tasks (`14.3%`) with a `35.00%` mean geodesic area error and a `166.05%` population overcount on spatial joins. VeriGeo passed all `70/70` tasks (`100.0%`, `68.16 ms` mean runtime), cutting geodesic area error to `0.023%` and reducing per-zone population error (NMAE) against a 40,000-point ground truth to `3.62%` (versus `7.92%` for standard area-weighted interpolation).
+Automated GIS tools use large language models to write and run Python scripts for spatial analysis, treating any script that exits with code `0` as successful. Because GeoPandas and Shapely allow invalid cartographic and statistical operations without raising exceptions, scripts that finish cleanly still frequently produce wrong results: buffers and areas are computed on unprojected latitude-longitude degrees (`EPSG:4326`), spatial joins double-count populations across zone boundaries while summing ratio columns such as median income, polygon overlays leave narrow boundary slivers, and spatial regressions run on disconnected contiguity graphs or collinear predictors. We present **VeriGeo (NS-VGP 1.0)**, a runtime verification layer in Python that checks and repairs four conditions around each spatial operation: metric and equal-area projections, count versus ratio handling via Tobler's pycnophylactic interpolation and area-weighted averaging, polygon ring validity and sliver removal ($2 \times \text{Area}/\text{Perimeter} < 1.0\text{ m}$), and spatial regression pre-checks. Each run outputs a JSON **Spatial Proof Certificate (SPC)** with a SHA-256 hash of the inputs and outputs. Across 70 benchmark tasks (60 fault-injected and 10 clean control tasks, 535 runs) scored by an independent ground-truth evaluator, unverified GeoPandas scripts passed `10/70` tasks (`14.3%`) with a `35.00%` mean geodesic area error and a `169.56%` population overcount on spatial joins. VeriGeo passed `66/70` tasks (`94.3%`, 95% Wilson CI `[86.2%, 97.8%]`, `44.35 ms` mean runtime), cutting geodesic area error to `0.024%` and reducing per-zone population error (NMAE) on smooth density surfaces to `3.62%` (versus `7.92%` for standard area-weighted interpolation), while highlighting four remaining edge cases involving unmasked coastal barriers, ambiguously named integer ratio columns, sub-meter utility canals, and multi-way collinearity.
 
 **Keywords:** Autonomous GIS; GeoAI; Modifiable Areal Unit Problem (MAUP); Pycnophylactic Interpolation; Spatial Workflow Verification; Spatial Proof Certificate.
 
@@ -80,26 +80,26 @@ All 70 tasks (535 total method and ablation runs) were executed via `benchmarks/
 
 | Task Category | Method | Passed ($k/N$) | Pass Rate (%) [95% Wilson CI] | Mean Area Error (%) | Total Pop Error (%) | Zone Pop NMAE (%) / Slivers | Income Ratio ($\times$) / $\kappa$ | Mean Latency (ms $\pm$ SD) |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **1. CRS Distortion ($N=15$)** | `naive` | 0/15 | 0.0% [0.0, 20.4] | 35.00% (med 26.87%) | -- | -- | -- | 58.00 $\pm$ 166.33 |
-| | `naive_pre` | 0/15 | 0.0% [0.0, 20.4] | 35.00% (med 26.87%) | -- | -- | -- | 14.04 $\pm$ 8.05 |
-| | **VeriGeo (`ns_vgp`)** | **15/15** | **100.0% [79.6, 100.0]** | **0.023% (med 0.015%)** | -- | -- | -- | **33.34 $\pm$ 25.81** |
-| **2. MAUP Aggregation ($N=15$)** | `naive` | 0/15 | 0.0% [0.0, 20.4] | -- | 166.05% | 166.05% | 4.001$\times$ | 23.76 $\pm$ 13.48 |
-| | `naive_pre` | 0/15 | 0.0% [0.0, 20.4] | -- | 166.05% | 166.05% | 4.001$\times$ | 19.44 $\pm$ 8.51 |
-| | `areaw` ($N=10$ joins) | 10/10 | 100.0% [72.2, 100.0] | -- | 0.0003% | 7.92% | 1.001$\times$ | 73.26 $\pm$ 33.90 |
-| | **VeriGeo (`ns_vgp`)** | **15/15** | **100.0% [79.6, 100.0]** | -- | **0.0000%** | **3.62%** | **1.001$\times$** | **189.46 $\pm$ 104.72** |
-| **3. Topology & Slivers ($N=15$)** | `naive` | 0/15 | 0.0% [0.0, 20.4] | -- | -- | 2.00 slivers | -- | 235.47 $\pm$ 31.87 |
-| | `naive_pre` | 0/15 | 0.0% [0.0, 20.4] | -- | -- | 2.00 slivers | -- | 231.32 $\pm$ 24.49 |
-| | `ns_vgp_v1` (`pp_rel`) | 10/15 | 66.7% [41.7, 84.8] | -- | -- | 0.47 slivers | -- | 69.02 $\pm$ 20.53 |
-| | **VeriGeo (`ns_vgp`)** | **15/15** | **100.0% [79.6, 100.0]** | -- | -- | **0.00 slivers** | -- | **66.13 $\pm$ 11.89** |
-| **4. Spatial Statistics ($N=15$)** | `naive` | 0/15 | 0.0% [0.0, 20.4] | -- | -- | 2 islands, `NaN` | $\kappa \le 133,728$ | 7.71 $\pm$ 1.48 |
-| | `naive_pre` | 0/15 | 0.0% [0.0, 20.4] | -- | -- | 2 islands | $\kappa \le 133,728$ | 10.65 $\pm$ 1.98 |
-| | **VeriGeo (`ns_vgp`)** | **15/15** | **100.0% [79.6, 100.0]** | -- | -- | **0 islands** | **$\kappa = 1.00$** | **20.12 $\pm$ 4.50** |
-| **5. Clean Control ($N=10$)** | `naive` | 10/10 | 100.0% [72.2, 100.0] | 0.030% | -- | 0 repairs | -- | 5.65 $\pm$ 5.04 |
-| | `naive_pre` | 10/10 | 100.0% [72.2, 100.0] | 0.030% | -- | 0 repairs | -- | 5.65 $\pm$ 5.36 |
-| | **VeriGeo (`ns_vgp`)** | **10/10** | **100.0% [72.2, 100.0]** | **0.030%** | -- | **0 repairs** | -- | **13.55 $\pm$ 3.85** |
-| **All Tasks ($N=70$)** | `naive` | 10/70 | 14.3% [7.9, 24.3] | 35.00% | 166.05% | 166.05% | 4.001$\times$ | 70.56 |
-| | `naive_pre` | 10/70 | 14.3% [7.9, 24.3] | 35.00% | 166.05% | 166.05% | 4.001$\times$ | 59.97 |
-| | **VeriGeo (`ns_vgp`)** | **70/70** | **100.0% [94.8, 100.0]** | **0.023%** | **0.0000%** | **3.62%** | **1.001$\times$** | **68.16** |
+| **1. CRS Distortion ($N=15$)** | `naive` | 0/15 | 0.0% [0.0, 20.4] | 35.00% (med 26.87%) | -- | -- | -- | 34.16 $\pm$ 98.41 |
+| | `naive_pre` | 0/15 | 0.0% [0.0, 20.4] | 35.00% (med 26.87%) | -- | -- | -- | 9.29 $\pm$ 5.24 |
+| | **VeriGeo (`ns_vgp`)** | **15/15** | **100.0% [79.6, 100.0]** | **0.024% (med 0.015%)** | -- | -- | -- | **22.07 $\pm$ 12.15** |
+| **2. MAUP Aggregation ($N=15$)** | `naive` | 0/15 | 0.0% [0.0, 20.4] | -- | 169.56% | 169.56% | 3.987$\times$ | 15.79 $\pm$ 6.53 |
+| | `naive_pre` | 0/15 | 0.0% [0.0, 20.4] | -- | 169.56% | 169.56% | 3.987$\times$ | 12.56 $\pm$ 3.31 |
+| | `areaw` ($N=10$ joins) | 9/10 | 90.0% [59.6, 98.2] | -- | 0.0002% | 7.92% (12.80% w/ `MAUP-14`) | 1.001$\times$ | 51.82 $\pm$ 24.48 |
+| | **VeriGeo (`ns_vgp`)** | **13/15** | **86.7% [62.1, 96.3]** | -- | **0.0000%** | **3.62% (10.10% w/ `MAUP-14`)** | **1.001$\times$ (3.89$\times$ on `MAUP-15`)** | **125.60 $\pm$ 59.18** |
+| **3. Topology & Slivers ($N=15$)** | `naive` | 0/15 | 0.0% [0.0, 20.4] | -- | -- | 1.87 slivers | -- | 142.33 $\pm$ 26.82 |
+| | `naive_pre` | 0/15 | 0.0% [0.0, 20.4] | -- | -- | 1.87 slivers | -- | 134.97 $\pm$ 22.90 |
+| | `ns_vgp_v1` (`pp_rel`) | 10/15 | 66.7% [41.7, 84.8] | -- | -- | 0.40 slivers | -- | 46.50 $\pm$ 7.62 |
+| | **VeriGeo (`ns_vgp`)** | **14/15** | **93.3% [70.2, 98.8]** | -- | -- | **0.00 slivers (`TOPO-15` canal)** | -- | **42.73 $\pm$ 4.65** |
+| **4. Spatial Statistics ($N=15$)** | `naive` | 0/15 | 0.0% [0.0, 20.4] | -- | -- | 2 islands, `NaN` | $\kappa \le 164,308$ | 6.14 $\pm$ 2.83 |
+| | `naive_pre` | 0/15 | 0.0% [0.0, 20.4] | -- | -- | 2 islands | $\kappa \le 164,308$ | 6.66 $\pm$ 1.66 |
+| | **VeriGeo (`ns_vgp`)** | **14/15** | **93.3% [70.2, 98.8]** | -- | -- | **0 islands** | **$\kappa = 1.00$ (`STAT-13` $\kappa = 66\text{k}$)** | **13.09 $\pm$ 3.16** |
+| **5. Clean Control ($N=10$)** | `naive` | 10/10 | 100.0% [72.2, 100.0] | 0.030% | -- | 0 repairs | -- | 3.50 $\pm$ 3.24 |
+| | `naive_pre` | 10/10 | 100.0% [72.2, 100.0] | 0.030% | -- | 0 repairs | -- | 3.46 $\pm$ 3.40 |
+| | **VeriGeo (`ns_vgp`)** | **10/10** | **100.0% [72.2, 100.0]** | **0.030%** | -- | **0 repairs** | -- | **8.20 $\pm$ 1.98** |
+| **All Tasks ($N=70$)** | `naive` | 10/70 | 14.3% [7.9, 24.3] | 35.00% | 169.56% | 169.56% | 3.987$\times$ | 43.02 |
+| | `naive_pre` | 10/70 | 14.3% [7.9, 24.3] | 35.00% | 169.56% | 169.56% | 3.987$\times$ | 35.51 |
+| | **VeriGeo (`ns_vgp`)** | **66/70** | **94.3% [86.2, 97.8]** | **0.024%** | **0.0000%** | **3.62% (10.10% all)** | **1.001$\times$** | **44.35** |
 
 ![MAUP Case Study](figures/fig3_maup_case_study.png)
 

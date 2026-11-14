@@ -117,8 +117,10 @@ def build_crs_tasks() -> list[dict[str, Any]]:
     for i in range(15):
         lat = LATS[i]
         lon = -77.8 + (i * 7.5) % 120.0 - 40.0
+        # CRS-15 (i == 14): wide multi-zone span (two sites 12 deg apart at 64.1N)
         polys = [
-            box(lon + dx * 0.04, lat + dy * 0.04, lon + (dx + 1) * 0.04, lat + (dy + 1) * 0.04)
+            box(lon + (12.0 if (i == 14 and dx == 2) else dx * 0.04), lat + dy * 0.04,
+                lon + (12.04 if (i == 14 and dx == 2) else (dx + 1) * 0.04), lat + (dy + 1) * 0.04)
             for dx in range(3)
             for dy in range(3)
         ]
@@ -188,17 +190,29 @@ def build_maup_tasks() -> list[dict[str, Any]]:
     for i in range(15):
         rng = np.random.default_rng(1000 + i)
         n = 40000
-        centers = rng.uniform([x0 + 0.2 * W, y0 + 0.2 * W], [x0 + 0.8 * W, y0 + 0.8 * W], size=(3, 2))
-        sig = rng.uniform(0.012, 0.03, 3)
-        comp = rng.choice(4, size=n, p=[0.25, 0.25, 0.25, 0.25])  # 3 hotspots + uniform background
-        pts = np.where(
-            (comp < 3)[:, None],
-            centers[np.minimum(comp, 2)] + rng.normal(size=(n, 2)) * sig[np.minimum(comp, 2), None],
-            rng.uniform([x0, y0], [x0 + W, y0 + W], size=(n, 2)),
-        )
-        ok = (pts[:, 0] >= x0) & (pts[:, 0] < x0 + W) & (pts[:, 1] >= y0) & (pts[:, 1] < y0 + W)
-        pts = pts[ok]
-        px, py = pts[:, 0], pts[:, 1]
+        if i == 13:
+            # MAUP-14: sharp uninhabited water barrier (42% of residents on narrow western shore of tract T_06/T_10)
+            n_shore = int(0.42 * n)
+            px = np.concatenate([
+                x0 + 0.025 + rng.uniform(0.0005, 0.0035, size=n_shore),
+                rng.uniform(x0, x0 + W, size=n - n_shore),
+            ])
+            py = np.concatenate([
+                y0 + 0.025 + rng.uniform(0.0005, 0.048, size=n_shore),
+                rng.uniform(y0, y0 + W, size=n - n_shore),
+            ])
+        else:
+            centers = rng.uniform([x0 + 0.2 * W, y0 + 0.2 * W], [x0 + 0.8 * W, y0 + 0.8 * W], size=(3, 2))
+            sig = rng.uniform(0.012, 0.03, 3)
+            comp = rng.choice(4, size=n, p=[0.25, 0.25, 0.25, 0.25])  # 3 hotspots + uniform background
+            pts = np.where(
+                (comp < 3)[:, None],
+                centers[np.minimum(comp, 2)] + rng.normal(size=(n, 2)) * sig[np.minimum(comp, 2), None],
+                rng.uniform([x0, y0], [x0 + W, y0 + W], size=(n, 2)),
+            )
+            ok = (pts[:, 0] >= x0) & (pts[:, 0] < x0 + W) & (pts[:, 1] >= y0) & (pts[:, 1] < y0 + W)
+            pts = pts[ok]
+            px, py = pts[:, 0], pts[:, 1]
         fx, fy = (px - x0) / W, (py - y0) / W
         income = 45000 + 80000 * fx + rng.normal(0, 8000, len(px))
         pm25 = 8 + 12 * fy + rng.normal(0, 1.5, len(px))
@@ -219,6 +233,9 @@ def build_maup_tasks() -> list[dict[str, Any]]:
         src_polys = [box(x0 + c * 0.025, y0 + r * 0.025, x0 + (c + 1) * 0.025, y0 + (r + 1) * 0.025)
                      for r in range(4) for c in range(4)]
         area_km2 = np.array([geo_area(p) for p in src_polys]) / 1e6
+        # MAUP-15 (i == 14): integer-dollar income under opaque column name 'attr_val'
+        inc_col = "attr_val" if i == 14 else "median_income"
+        inc_vals = np.round(T["inc"]) if i == 14 else T["inc"]
         src = gpd.GeoDataFrame(
             {
                 "tract_id": [f"T_{k+1:02d}" for k in range(16)],
@@ -226,14 +243,14 @@ def build_maup_tasks() -> list[dict[str, Any]]:
                 "population": T["pop"],
                 "households": np.round(T["pop"] * 0.4),
                 "pop_density": T["pop"] / area_km2,
-                "median_income": T["inc"],
+                inc_col: inc_vals,
                 "pm25": T["pm"],
                 "ndvi": T["nd"],
             },
             geometry=src_polys,
             crs="EPSG:4326",
         )
-        src = src.fillna({c: float(np.nanmean(src[c])) for c in ["median_income", "pm25", "ndvi"]})
+        src = src.fillna({c: float(np.nanmean(src[c])) for c in [inc_col, "pm25", "ndvi"]})
 
         dissolve = i % 3 == 2
         if not dissolve:
@@ -257,7 +274,7 @@ def build_maup_tasks() -> list[dict[str, Any]]:
         tasks.append({
             "task_id": f"MAUP-{i+1:02d}", "category": "MAUP", "operator": op,
             "gdf1": src, "gdf2": tgt, "params": params,
-            "meta": {"truth": truth, "n_points": int(len(px))},
+            "meta": {"truth": truth, "n_points": int(len(px)), "inc_col": inc_col},
         })
     return tasks
 
@@ -271,7 +288,14 @@ def build_topo_tasks() -> list[dict[str, Any]]:
         s = rng.uniform(0.03, 0.05)
         bow = Polygon([(bx, by), (bx + s, by + s), (bx + s, by), (bx, by + s), (bx, by)])
         p1 = box(bx + s, by, bx + 2 * s, by + s)
-        p2 = box(bx, by + s, bx + 2 * s, by + 2 * s)
+        # TOPO-15 (i == 14): legitimate narrow linear canal/corridor network (~0.80 m wide)
+        if i == 14:
+            s = 0.0005
+            bow = Polygon([(bx, by), (bx + s, by + s), (bx + s, by), (bx, by + s), (bx, by)])
+            p1 = box(bx + s, by, bx + 2 * s, by + s)
+            p2 = box(bx, by + s, bx + 0.025, by + s + 7.2e-6)
+        else:
+            p2 = box(bx, by + s, bx + 2 * s, by + 2 * s)
         slivers = []
         for k in range(1 + i % 3):
             w = rng.uniform(1e-7, 1.5e-6)
@@ -316,11 +340,16 @@ def build_stat_tasks() -> list[dict[str, Any]]:
         x1 = rng.normal(10, 2.5, n)
         x2 = 2.0 * x1 + rng.normal(0, 1e-4, n)
         op = ["gwr", "lisa", "morans_i"][i % 3]
-        g = gpd.GeoDataFrame({"disease_rate": vals, "x1": x1, "x2_collinear": x2},
-                             geometry=polys, crs="EPSG:4326")
+        cols = {"disease_rate": vals, "x1": x1, "x2_collinear": x2}
         params: dict[str, Any] = {"column": "disease_rate", "weights": "queen"}
         if op == "gwr":
-            params["predictors"] = ["x1", "x2_collinear"]
+            if i == 12:
+                # STAT-13 (i == 12): 3 mutually collinear predictors (single-pass pruner drops only 1)
+                cols["x3_collinear"] = -1.5 * x1 + rng.normal(0, 1e-4, n)
+                params["predictors"] = ["x1", "x2_collinear", "x3_collinear"]
+            else:
+                params["predictors"] = ["x1", "x2_collinear"]
+        g = gpd.GeoDataFrame(cols, geometry=polys, crs="EPSG:4326")
         tasks.append({"task_id": f"STAT-{i+1:02d}", "category": "STAT", "operator": op,
                       "gdf1": g, "gdf2": None, "params": params, "meta": {"n": n}})
     return tasks
@@ -367,29 +396,31 @@ def score_crs(task, method) -> dict[str, Any]:
 
 def _maup_arrays(task, method):
     src, tgt, op = task["gdf1"], task["gdf2"], task["operator"]
+    inc_col = task["meta"].get("inc_col", "median_income")
+    cols = ["population", "households", "pop_density", inc_col, "pm25", "ndvi"]
     if method[0] in ("naive", "naive_pre"):
         if op == "spatial_join":
             j = gpd.sjoin(tgt, src, how="left", predicate="intersects")
-            a = j.groupby(j.index)[MAUP_COLS].sum().reindex(tgt.index)
+            a = j.groupby(j.index)[cols].sum().reindex(tgt.index)
         else:
-            a = src[MAUP_COLS + ["district", "geometry"]].dissolve(by="district", aggfunc="sum")
+            a = src[cols + ["district", "geometry"]].dissolve(by="district", aggfunc="sum")
             a = a.sort_index()
-        return a["population"].to_numpy(float), a["median_income"].to_numpy(float), None
+        return a["population"].to_numpy(float), a[inc_col].to_numpy(float), None
     if method[0] == "areaw":
         s, t = src.to_crs(5070).reset_index(drop=True), tgt.to_crs(5070).reset_index(drop=True)
         s["_sid"], t["_tid"] = np.arange(len(s)), np.arange(len(t))
-        ov = gpd.overlay(s[["_sid"] + MAUP_COLS + ["geometry"]], t[["_tid", "geometry"]], how="intersection")
+        ov = gpd.overlay(s[["_sid"] + cols + ["geometry"]], t[["_tid", "geometry"]], how="intersection")
         ov["a"] = ov.geometry.area
         sa = s.geometry.area.to_numpy()
         ov["frac"] = ov["a"] / sa[ov["_sid"].to_numpy()]
         pop = (ov["population"] * ov["frac"]).groupby(ov["_tid"]).sum().reindex(range(len(t))).fillna(0)
-        inc = ((ov["median_income"] * ov["a"]).groupby(ov["_tid"]).sum()
+        inc = ((ov[inc_col] * ov["a"]).groupby(ov["_tid"]).sum()
                / ov["a"].groupby(ov["_tid"]).sum()).reindex(range(len(t)))
         return pop.to_numpy(float), inc.to_numpy(float), None
     res, spc = _ns(method, task["operator"], src, tgt, dict(task["params"]))
     key = "zone_id" if task["operator"] == "spatial_join" else "district"
     r = res.sort_values(key)
-    return r["population"].to_numpy(float), r["median_income"].to_numpy(float), spc
+    return r["population"].to_numpy(float), r[inc_col].to_numpy(float), spc
 
 
 def score_maup(task, method) -> dict[str, Any] | None:
@@ -404,7 +435,7 @@ def score_maup(task, method) -> dict[str, Any] | None:
         pop_zone_nmae = float(np.nansum(np.abs(pop - tp)) / tp.sum() * 100)
         inc_ratio = float(np.nanmean(inc) / np.nanmean(ti))
         inc_mape = float(np.nanmean(np.abs(inc - ti) / ti) * 100)
-        passed = bool(pop_total_err < 0.1 and 0.9 <= inc_ratio <= 1.1)
+        passed = bool(pop_total_err < 0.5 and pop_zone_nmae < 15.0 and inc_mape < 10.0)
         crashed = False
     except Exception:  # noqa: BLE001
         pop = inc = np.array([])
@@ -463,7 +494,7 @@ def score_topo(task, method) -> dict[str, Any]:
         passed = False
     else:
         m = topo_eval(out, task["meta"]["legit_area"])
-        passed = bool(m["invalid_geoms"] == 0 and m["slivers"] == 0)
+        passed = bool(m["invalid_geoms"] == 0 and m["slivers"] == 0 and m["legit_area_retained_pct"] >= 99.0)
     return {"passed": passed, "crashed": crashed, **m, "latency_ms": (time.perf_counter() - t0) * 1000}
 
 
@@ -598,18 +629,19 @@ def fig_main(summary) -> None:
         )
         for idx, (bar, v) in enumerate(zip(bars, vals)):
             if m == "ns_vgp":
+                lbl = f"{v:.0f}%" if v in (0.0, 100.0) else f"{v:.1f}%"
                 axes[0].text(
                     bar.get_x() + bar.get_width() / 2,
                     v + hi[idx] + 2.0,
-                    "100%",
-                    ha="center", va="bottom", fontsize=7.6, fontweight="bold", color="#065f46"
+                    lbl,
+                    ha="center", va="bottom", fontsize=7.5, fontweight="bold", color="#065f46"
                 )
             elif m == "naive" and idx == len(cats):
                 axes[0].text(
                     bar.get_x() + bar.get_width(),
                     v + hi[idx] + 2.5,
                     f"{v:.1f}%",
-                    ha="center", va="bottom", fontsize=7.6, fontweight="bold", color="#991b1b"
+                    ha="center", va="bottom", fontsize=7.5, fontweight="bold", color="#991b1b"
                 )
     axes[0].set_xticks(x)
     axes[0].set_xticklabels(cats + ["ALL (N=70)"], fontsize=9)
