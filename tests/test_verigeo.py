@@ -9,7 +9,7 @@ from shapely.geometry import Polygon, box
 from verigeo import (
     PROTOCOL_VERSION,
     NeuroSymbolicGeoVerifier,
-    VeriGeoGasMiddleware,
+    VeriGeoServiceMiddleware,
     VerifiedDAGExecutor,
     classify_attribute_semantics,
     compute_optimal_metric_crs,
@@ -173,8 +173,8 @@ def test_axiom4_spatial_statistics_island_and_collinearity_healing() -> None:
     assert "global_moran_i" in res_gdf.columns
 
 
-def test_gas_middleware_and_verified_dag_executor() -> None:
-    """Verify GAS 1.0.0 middleware and multi-node VerifiedDAGExecutor produce Merkle SPC proofs."""
+def test_service_middleware_and_verified_dag_executor() -> None:
+    """Verify service middleware and multi-node VerifiedDAGExecutor produce Merkle SPC proofs."""
     src_gdf = gpd.GeoDataFrame(
         {
             "tract_id": ["T1", "T2"],
@@ -190,16 +190,16 @@ def test_gas_middleware_and_verified_dag_executor() -> None:
         crs="EPSG:4326",
     )
 
-    mw = VeriGeoGasMiddleware(auto_heal=True)
-    gas_resp = mw.execute_verified_gas_task(
+    mw = VeriGeoServiceMiddleware(auto_heal=True)
+    svc_resp = mw.execute_verified_task(
         agent_id="vector_analysis_agent",
         operator="spatial_join",
         primary_gdf=src_gdf,
         secondary_gdf=tgt_gdf,
         parameters={"aggfunc": "sum"},
     )
-    assert gas_resp["status"] == "SUCCEEDED"
-    assert gas_resp["verifiable_guarantee"] is True
+    assert svc_resp["status"] == "SUCCEEDED"
+    assert svc_resp["verifiable_guarantee"] is True
 
     dag = VerifiedDAGExecutor(auto_heal=True)
     dag_out = dag.execute_dag(

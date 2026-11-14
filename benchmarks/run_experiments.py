@@ -6,7 +6,7 @@ Methods compared
 ----------------
 naive      : idiomatic one-liner GeoPandas scripts, i.e. what an LLM or a thin service wrapper
              typically emits (1 deg = 111,320 m, sjoin + groupby.sum, plain overlay, queen weights).
-             NOTE: these are our own scripts. They are NOT the real LLM-Geo or GAS agents.
+             NOTE: these are our own scripts. They are NOT live external LLM agents.
 naive_pre  : naive + light preprocessing (CRS alignment, make_valid, dropna).
 areaw      : plain area-weighted interpolation without pycnophylactic smoothing (MAUP tasks only).
 ns_vgp     : VeriGeo with all four axioms enabled.
@@ -525,7 +525,7 @@ def fig_architecture() -> None:
         ax.text(x + w / 2, y + h * 0.68, t, ha="center", va="center", fontsize=9.5, fontweight="bold")
         ax.text(x + w / 2, y + h * 0.30, s, ha="center", va="center", fontsize=7.8)
 
-    b(0.3, 3.3, 2.5, 1.4, "Planner (LLM / GAS client)", "emits operator + parameters", "#eff6ff", "#2563eb")
+    b(0.3, 3.3, 2.5, 1.4, "Planner (LLM / Agent Client)", "emits operator + parameters", "#eff6ff", "#2563eb")
     b(0.3, 0.6, 2.5, 1.6, "Input layers", "any CRS, any topology,\nmixed attribute types", "#f8fafc", "#64748b")
     ax.add_patch(mpatches.FancyBboxPatch((3.3, 0.4), 5.4, 4.6, boxstyle="round,pad=0.1,rounding_size=0.2",
                                          fc="#fefce8", ec="#ca8a04", lw=1.8, ls="--"))

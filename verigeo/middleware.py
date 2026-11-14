@@ -1,10 +1,10 @@
-"""GAS 1.0.0 & Multi-Step DAG Verification Middleware for VeriGeo (NS-VGP 1.0).
+"""Service & Multi-Step DAG Verification Middleware for VeriGeo (NS-VGP 1.0).
 
 Provides:
-  1. `VeriGeoGasMiddleware`: Intercepts Geospatial Agentic Services (GAS 1.0.0)
-     `ExecuteTask` payloads, verifies and auto-heals spatial pre/post-conditions,
-     and attaches a cryptographic `SpatialProofCertificate` (`spc_certificate.json`)
-     to the GAS task response `artifacts` and `diagnostics`.
+  1. `VeriGeoServiceMiddleware`: Intercepts autonomous GIS task payloads,
+     verifies and auto-heals spatial pre/post-conditions, and attaches a
+     cryptographic `SpatialProofCertificate` (`spc_certificate.json`) to the
+     task response `artifacts` and `diagnostics`.
   2. `VerifiedDAGExecutor`: Executes multi-step spatial analysis Directed Acyclic
      Graphs (DAGs) where every node transition is verified across the 4 formal
      GIScience axioms (A_CRS, A_MAUP, A_TOPO, A_STAT), producing a chained
@@ -14,7 +14,6 @@ Provides:
 from __future__ import annotations
 
 import hashlib
-import json
 from typing import Any
 
 import geopandas as gpd
@@ -26,13 +25,13 @@ from .protocol import (
 )
 
 
-class VeriGeoGasMiddleware:
-    """Neuro-Symbolic Verification Middleware for GAS 1.0.0 Agent Services."""
+class VeriGeoServiceMiddleware:
+    """Neuro-Symbolic Verification Middleware for Autonomous GIS Agent Services."""
 
     def __init__(self, auto_heal: bool = True) -> None:
         self.verifier = NeuroSymbolicGeoVerifier(auto_heal=auto_heal)
 
-    def execute_verified_gas_task(
+    def execute_verified_task(
         self,
         agent_id: str,
         operator: str,
@@ -41,7 +40,7 @@ class VeriGeoGasMiddleware:
         parameters: dict[str, Any] | None = None,
         semantic_overrides: dict[str, str] | None = None,
     ) -> dict[str, Any]:
-        """Execute a GAS 1.0.0 task with formal 4-axiom verification and SPC attachment."""
+        """Execute an autonomous GIS task with formal 4-axiom verification and SPC attachment."""
         result_gdf, spc = self.verifier.verify_and_execute(
             operator=operator,
             primary_gdf=primary_gdf,
@@ -51,7 +50,7 @@ class VeriGeoGasMiddleware:
         )
         spc_dict = spc.to_dict()
         return {
-            "service": "GAS",
+            "service": "NS-VGP",
             "version": "1.0.0",
             "verigeo_protocol": PROTOCOL_VERSION,
             "agent_id": agent_id,

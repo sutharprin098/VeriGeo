@@ -1,7 +1,7 @@
 """Neuro-Symbolic Verifiable GeoAI Protocol (NS-VGP / VeriGeo 1.0).
 
 A formal neuro-symbolic verification and self-healing execution engine for
-Autonomous GIS and Geospatial Agentic Services (GAS). Bridges neural LLM
+Autonomous GIS workflows. Bridges neural LLM
 workflow planning with symbolic GIScience axioms grounded in foundational
 spatial theory:
 

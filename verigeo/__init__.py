@@ -14,7 +14,7 @@ from .protocol import (
     pycnophylactic_areal_interpolation,
     tool_verify_and_heal_spatial_workflow,
 )
-from .gas_middleware import VeriGeoGasMiddleware, VerifiedDAGExecutor
+from .middleware import VeriGeoServiceMiddleware, VerifiedDAGExecutor
 
 __version__ = "1.0.0"
 
@@ -27,7 +27,7 @@ __all__ = [
     "AxiomCheckResult",
     "SpatialProofCertificate",
     "NeuroSymbolicGeoVerifier",
-    "VeriGeoGasMiddleware",
+    "VeriGeoServiceMiddleware",
     "VerifiedDAGExecutor",
     "classify_attribute_semantics",
     "compute_optimal_metric_crs",
