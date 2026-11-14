@@ -26,7 +26,7 @@ Libraries like GeoPandas and Shapely allow invalid cartographic, aggregation, to
 
 | Rule | What VeriGeo Checks | Automatic Repair When Check Fails |
 | :--- | :--- | :--- |
-| **Rule 1: Map Projections & CRS** | Metric operations (`buffer`, `area`, `spatial_join`, `dissolve`, `intersection`) must use projected coordinates (meters/feet) and matching CRS across layers. | Reprojects geographic (`EPSG:4326`) or mismatched layers to **Equal-Area** (`EPSG:5070` CONUS, `EPSG:3035` Europe, `EPSG:6933` global) for area/aggregation operations or **local UTM** (`EPSG:326xx`/`327xx`) for distance/buffer operations. |
+| **Rule 1: Map Projections & CRS** | Metric operations (`buffer`, `area`, `spatial_join`, `dissolve`, `intersection`) must use projected coordinates and matching CRS across layers; every input layer must have an explicitly defined source CRS. | Rejects missing CRS metadata rather than assuming EPSG:4326, and reprojects geographic (`EPSG:4326`) or mismatched layers to **Equal-Area** (`EPSG:5070` CONUS, `EPSG:3035` Europe, `EPSG:6933` global) for area/aggregation operations or **local UTM** (`EPSG:326xx`/`327xx`) for distance/buffer operations. |
 | **Rule 2: Counts vs. Ratios (MAUP)** | Ratio columns (`median_income`, `pop_density`, `rate`, `pct`, `ndvi`, `pm25`) must never be summed (`SUM`), and count columns (`population`, `households`, `crimes`) must conserve total count across zone transfers. | Classifies columns into counts, ratios, and identifiers; runs **Tobler's smooth pycnophylactic interpolation** ($40 \times 40$ grid, 35 smoothing passes with exact tract rescaling) for counts and **area-weighted averaging** for ratios. |
 
 | **Rule 3: Geometry Validity & Overlay Slivers** | Inputs and outputs must pass Shapely validity checks; overlay outputs are also tested for thin, elongated fragments. | Repairs invalid geometries with `make_valid()` and removes fragments only when equivalent width is `< 1.0 m` and Polsby-Popper compactness is `< 0.25`. A legitimate `0.80 m` canal is still removed in `TOPO-15`. |
@@ -178,7 +178,7 @@ VeriGeo/
 │   ├── VeriGeo_Overleaf_Submission.zip
 │   └── figures/             # 300-DPI publication figures (PNG + PDF)
 ├── tests/
-│   └── test_verigeo.py      # 9 tests; STAT-13 pre-check regression added, execution pending
+│   └── test_verigeo.py      # 10 tests; STAT-13 and missing-CRS regression tests added, execution pending
 ├── pyproject.toml
 └── LICENSE
 ```
