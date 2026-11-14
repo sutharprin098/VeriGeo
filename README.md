@@ -172,10 +172,9 @@ VeriGeo/
 │   ├── benchmark_results.json
 │   └── per_task_validation_log.csv
 ├── paper/
-│   ├── main.tex             # Two-column LaTeX manuscript (EarthArXiv / Overleaf ready)
+│   ├── main.tex             # Canonical two-column manuscript; rebuild PDF/Overleaf bundle after source updates
 │   ├── references.bib       # Verified BibTeX bibliography with DOIs
 │   ├── MANUSCRIPT.md        # Markdown version of the manuscript
-│   ├── VeriGeo_Overleaf_Submission.zip
 │   └── figures/             # 300-DPI publication figures (PNG + PDF)
 ├── tests/
 │   └── test_verigeo.py      # 10 tests; STAT-13 and missing-CRS regression tests added, execution pending
