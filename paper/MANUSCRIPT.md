@@ -1,132 +1,177 @@
-# NS-VGP: A Neuro-Symbolic Verifiable GeoAI Protocol for Formally Guaranteed, Mass-Conserving, and Scale-Aware Autonomous GIS
+# NS-VGP: A Neuro-Symbolic Protocol for Verifying CRS Projections, MAUP Aggregation, Topology, and Spatial Econometrics in Autonomous GIS
 
 **Author:** Prince Suthar  
-**Affiliation:** AutoGIS Research Lab & Open-Source Geospatial Intelligence Initiative  
+**Affiliation:** AutoGIS Research Lab  
 **Protocol Version:** `NS-VGP/1.0.0` (`VeriGeo 1.0`)  
-**Code & Benchmark Repository:** `core/neuro_symbolic_verifier.py` | `research_paper/run_experiments.py`
+**Repository:** https://github.com/sutharprin098/VeriGeo  
+**Validation Data:** `benchmarks/per_task_validation_log.csv` (180 task runs) and `benchmarks/benchmark_results.json`
 
 ---
 
 ## Abstract
 
-The rapid emergence of Large Language Model (LLM)-driven Autonomous GIS (e.g., LLM-Geo, GIS Copilot, GeoGPT) and service-oriented agent frameworks such as Geospatial Agentic Services (GAS 1.0.0) has transformed how users discover, compose, and execute spatial analysis workflows. However, existing GeoAI agents rely almost exclusively on unconstrained neural planning and syntactic code execution. Consequently, they frequently commit silent yet catastrophic cartographic and statistical errors that produce syntactically valid maps while violating fundamental laws of Geographic Information Science (GIScience). Specifically, current autonomous GIS agents:
-1. Apply planar Euclidean distance and area operators directly to unprojected geographic coordinates ($\text{EPSG}:4326$), incurring severe latitude-dependent secant distortions ($\delta_A(\phi) = \sec(\phi) - 1$);
-2. Violate the Modifiable Areal Unit Problem (MAUP) and commit the **Ecological Fallacy** by summing (`SUM`) scale-invariant *intensive* variables (such as population density, median income, air quality indices, or NDVI) during spatial joins and polygon dissolves, while duplicating *extensive* counts across intersecting polygons;
-3. Propagate topological self-intersections and overlay micro-sliver artifacts; and
-4. Violate spatial econometric pre-conditions such as spatial weights connectivity (island polygons) and design-matrix non-collinearity in Local Indicators of Spatial Association (LISA) and Geographically Weighted Regression (GWR).
+Autonomous GIS agents such as LLM-Geo, GIS Copilot, and GeoGPT use large language models to write and run spatial analysis scripts. Service frameworks such as Geospatial Agentic Services (GAS 1.0.0) wrap these agents behind standardized HTTP endpoints. In both designs, an execution is marked successful whenever the generated Python script finishes with exit code `0` and writes an output file. Because geometric libraries like GeoPandas and Shapely allow operations that violate cartographic and statistical assumptions without raising runtime exceptions, existing agents routinely produce flawed maps and tables. Four silent failures occur repeatedly in practice:
+1. Planar Euclidean distance and area operations are executed directly on unprojected geographic coordinates (`EPSG:4326`), which introduces latitude-dependent secant distortion.
+2. Spatial joins and polygon dissolves sum (`SUM`) intensive ratio variables such as median income, population density, $\text{PM}_{2.5}$, or NDVI while duplicating extensive population counts across intersecting zones.
+3. Polygon overlays leave self-intersecting rings and thin boundary slivers in output layers.
+4. Spatial autocorrelation and regression models (Moran's $I$, LISA, and GWR) run on disconnected contiguity graphs, small samples ($N < 30$), or collinear design matrices.
 
-To bridge this gap between neural reasoning and formal GIScience theory, we propose the **Neuro-Symbolic Verifiable GeoAI Protocol (NS-VGP / VeriGeo 1.0)**, an architecture-agnostic verification and self-healing protocol that wraps both desktop GIS agents (AutoGIS Studio) and distributed agent services (GAS 1.0.0). NS-VGP formalizes four machine-checkable spatial axioms — **($\mathcal{A}_{\text{CRS}}$) Metric & Geodesic CRS Invariant**, **($\mathcal{A}_{\text{MAUP}}$) Semantic Scale Type & Pycnophylactic Mass-Conservation Invariant**, **($\mathcal{A}_{\text{Topo}}$) Topological 9-Intersection & Polsby–Popper Manifold Invariant**, and **($\mathcal{A}_{\text{Stat}}$) Spatial Statistical Pre-Condition Invariant** — coupled with a deterministic symbolic critic that automatically repairs violated pre- and post-conditions. Every verified workflow emits a cryptographically signed **Spatial Proof Certificate (SPC)** attesting to formal axiom satisfaction. Evaluated across a 60-workflow multi-domain benchmark, unconstrained LLM-Geo and standard GAS 1.0.0 baselines achieve $50.0\%$ and $83.3\%$ syntactic completion rates respectively, yet drop to **$0.0\%$ formal scientific validity** on adversarial cartographic tasks (incurring $44.3\%\text{--}49.3\%$ mean area distortion, $86.9\%$ extensive mass duplication error, and $4.0\times$ intensive ecological inflation). In contrast, NS-VGP achieves **$100.0\%$ verified scientific validity**, **$0.000\%$ pycnophylactic mass-conservation error**, and zero unpruned topological slivers.
-
----
-
-## 1. Introduction & Motivation
-
-Geographic Information Systems (GIS) are undergoing a foundational transition from manual, desktop-bound toolboxes toward **Autonomous GIS** — AI-powered spatial agents capable of decomposing natural-language queries into multi-step geoprocessing directed acyclic graphs (DAGs), retrieving multi-source datasets, synthesizing executable code, and rendering cartographic products (Li & Ning, 2023; Janowicz et al., 2020; Mai et al., 2024). Recent milestones include LLM-Geo (Li & Ning, 2023), GeoGPT (Zhang et al., 2024), GIS Copilot (Akinboyewa et al., 2025), autonomous data retrieval agents (Ning et al., 2025), and **Geospatial Agentic Services (GAS 1.0.0)** (Li et al., 2026), which establishes a standardized HTTP service contract (`GetCapabilities`, `DescribeAgent`, `ExecuteTask`) for interoperable geospatial intelligence.
-
-Yet a fundamental scientific gap persists across all existing neural GIS agents: **syntactic code execution success does not guarantee cartographic, topological, or statistical validity**. When an LLM agent executes `gdf.buffer(1000)` on an unprojected `EPSG:4326` layer or `gpd.sjoin(zones, tracts).groupby("zone_id").sum()` on a table containing `median_income` and `population`, Python raises no exception and produces a visually plausible GeoJSON output. However, the resulting dataset is scientifically corrupted.
-
-![Figure 1: Neuro-Symbolic Verifiable GeoAI Protocol Architecture](figures/fig1_protocol_architecture.png)
-
-As illustrated in **Figure 1**, **NS-VGP (VeriGeo 1.0)** solves this challenge by interposing a **Formal 4-Axiom Symbolic Verifier & Self-Healing Critic** between the neural planner (LLM / GAS Orchestrator) and the spatial execution engine.
+We present the **Neuro-Symbolic Verifiable GeoAI Protocol (NS-VGP / VeriGeo 1.0)**, a runtime verification and repair layer for autonomous GIS workflows. NS-VGP checks four formal conditions before and after each spatial operator: the Metric and Geodesic CRS Invariant ($\mathcal{A}_{\text{CRS}}$), the Semantic Scale Type and Pycnophylactic Mass-Conservation Invariant ($\mathcal{A}_{\text{MAUP}}$), the Topological 9-Intersection and Polsby-Popper Manifold Invariant ($\mathcal{A}_{\text{Topo}}$), and the Spatial Statistical Pre-Condition Invariant ($\mathcal{A}_{\text{Stat}}$). When a pre-condition or post-condition fails, a deterministic repair routine reprojects layers to local UTM or Equal-Area coordinates (`EPSG:5070` or `EPSG:6933`), replaces naive spatial joins with Tobler's iterative pycnophylactic interpolation for extensive counts and area-weighted averaging for intensive ratios, repairs invalid rings, removes slivers with Polsby-Popper compactness below $0.005$, and replaces disconnected contiguity matrices with row-standardized metric $k$-nearest neighbor weights. Each execution outputs a JSON **Spatial Proof Certificate (SPC)** signed with a SHA-256 hash. We evaluated NS-VGP on $60$ deterministic workflows ($420$ total runs including ablations) on Python `3.11.9`, GeoPandas `1.1.4`, and NumPy `1.26.4`. Unconstrained LLM-Geo and standard GAS 1.0.0 baselines finished $50.0\%$ and $83.3\%$ of tasks without crashing, but both scored $0.0\%$ on formal cartographic validity due to a $48.25\%\text{--}53.25\%$ mean area error, an $86.914\%$ population duplication error, and a $4.00\times$ inflation of intensive attributes. NS-VGP satisfied all four invariants across all $60$ tasks ($100.0\%$ validity), reduced mass-transfer error to $0.000\%$, and added a mean verification time of $67.32\text{ ms}$.
 
 ---
 
-## 2. Theoretical Foundation & Literature Synthesis
+## 1. Introduction
 
-Our protocol synthesizes five decades of foundational GIScience theory into machine-verifiable symbolic contracts:
+Over the past three years, researchers have connected large language models (LLMs) directly to spatial processing libraries to automate GIS workflows (Li & Ning, 2023; Janowicz et al., 2020; Mai et al., 2024). Systems such as LLM-Geo (Li & Ning, 2023), GeoGPT (Zhang et al., 2024), GIS Copilot (Akinboyewa et al., 2025), and handbook-driven data retrieval agents (Ning et al., 2025) translate natural-language instructions into executable GeoPandas, Rasterio, PySAL (Rey et al., 2022), or PyQGIS code. In 2026, Li et al. (2026) introduced Geospatial Agentic Services (GAS 1.0.0), a web protocol (`GetCapabilities`, `DescribeAgent`, `ExecuteTask`) that lets clients invoke remote GIS agents using standardized JSON requests.
 
-1. **Autonomous GIS & Interoperable Agent Services:** Li & Ning (2023) defined five pillars for Autonomous GIS (*self-generating, self-organizing, self-verifying, self-executing, self-growing*). While Li et al. (2026) standardized *interoperable agent execution* via GAS 1.0.0, NS-VGP provides the first formal mathematical realization of the *self-verifying* pillar.
-2. **Core Concepts of Spatial Information & Semantic Typing:** Kuhn (2012) and Scheider & Ballatore (2017) (see also Scheider et al., 2020; Meerlo et al., 2021) demonstrated that geoprocessing validity depends on semantic data types — specifically distinguishing *extensive* attributes (which depend on the size of the spatial support) from *intensive* attributes (which are intrinsic ratios/densities independent of support area).
-3. **MAUP, Areal Interpolation & Smooth Pycnophylactic Surfaces:** Openshaw (1984) formalized the Modifiable Areal Unit Problem (MAUP). Goodchild & Lam (1980) and Goodchild et al. (1993) formalized areal interpolation across incongruent polygon zones, while Tobler (1979) introduced *smooth pycnophylactic interpolation* ($\nabla^2 \rho = 0$ subject to $\iint_{A_s} \rho(x,y)\,dx\,dy = C_s$ and $\rho(x,y) \ge 0$) to preserve exact volume/mass across zone boundaries.
-4. **Point-Set Topological Relations & Sliver Compactness:** Egenhofer & Franzosa (1991) established the 9-intersection topological calculus underpinning OGC Simple Features (`ISO 19125`), and Polsby & Popper (1991) defined the isoperimetric compactness ratio $PP(g) = 4\pi A / P^2 \in (0, 1]$, which we adapt to detect and prune overlay sliver artifacts.
-5. **Spatial Econometrics & Local Autocorrelation:** Anselin (1995), Getis & Ord (1992), Brunsdon et al. (1996), and Rey et al. (2022) established the statistical pre-conditions for Moran's $I$, LISA, and GWR (connected spatial weights matrix $W$, conditional permutation under small $N$, and bounded design-matrix condition number $\kappa(X)$).
+These systems evaluate correctness at the syntax and process level. If a generated script runs without throwing a Python exception and writes a non-empty vector or raster file, the orchestrator accepts the result. In spatial analysis, however, code that runs cleanly often violates basic rules of cartography, areal aggregation, topology, or spatial statistics.
 
----
+We audited failure modes across open-source LLM GIS agents and service wrappers and grouped the most common errors into four categories:
 
-## 3. Formal Methodology: The Four Spatial Axioms
+1. **Unprojected Euclidean Metrics ($\mathcal{A}_{\text{CRS}}$):** When asked to buffer features by $1,000\text{ m}$ or compute polygon area, LLM agents frequently call `gdf.buffer()` or `gdf.area` directly on geographic coordinates (`EPSG:4326`), or align a second layer to the first layer's geographic CRS (`gdf2.to_crs(gdf1.crs)`). Because longitude degrees converge toward the poles by $\cos(\phi)$, planar area calculations on unprojected data distort areas by $\sec(\phi) - 1$, which reaches $32.10\%$ at $\phi = 40.8^\circ\text{N}$ and $128.94\%$ at $\phi = 64.1^\circ\text{N}$ (Snyder, 1987).
+2. **MAUP Aggregation Errors ($\mathcal{A}_{\text{MAUP}}$):** When transferring census or environmental attributes across mismatched polygon boundaries (such as census tracts to watersheds), LLM scripts typically run `gpd.sjoin(zones, tracts, predicate="intersects")` followed by `.groupby(zone_id).sum()`. This single line commits two distinct errors. First, any source tract that crosses a target boundary is summed into every target zone it touches, inflating extensive count totals (`population`, `households`) by $116.6\%\text{--}148.3\%$ (Goodchild & Lam, 1980; Tobler, 1979). Second, summing intensive ratio variables (`median_income`, `pop_density`, `ndvi`, `pm25`) commits the ecological fallacy (Openshaw, 1984; Kuhn, 2012; Scheider & Ballatore, 2017), multiplying average income or vegetation indices by the number of intersecting polygons.
+3. **Invalid Rings and Overlay Slivers ($\mathcal{A}_{\text{Topo}}$):** Real-world boundary files often contain self-intersecting rings ("bowtie" polygons). Furthermore, intersecting two slightly offset boundary layers produces narrow sliver polygons along shared edges (Egenhofer & Franzosa, 1991; Polsby & Popper, 1991). If left unpruned, these slivers distort feature counts and choropleth class breaks.
+4. **Violated Spatial Statistical Assumptions ($\mathcal{A}_{\text{Stat}}$):** Agents running Moran's $I$, Local Indicators of Spatial Association (LISA; Anselin, 1995), Getis-Ord $G_i^*$ (Getis & Ord, 1992), or Geographically Weighted Regression (GWR; Brunsdon et al., 1996) default to Queen contiguity weights (`weights="queen"`) and normal $p$-value approximations. When the input layer contains disconnected island polygons (zero neighbors), missing values (`NaN`), small sample sizes ($N < 30$), or collinear predictors (condition number $\kappa(\mathbf{X}) > 30$), the model either crashes with a singular matrix error or reports invalid $z$-scores.
 
-Let a geospatial workflow step be represented as $W = (\text{op}, \mathcal{L}_1, \mathcal{L}_2, \Theta)$, where $\text{op}$ is a spatial operator, $\mathcal{L}_1 = (\mathcal{G}_1, \mathcal{X}_1, \text{CRS}_1)$ is the primary spatial layer, $\mathcal{L}_2$ is an optional secondary layer, and $\Theta$ is the parameter dictionary synthesized by the neural agent.
+![Figure 1: NS-VGP Protocol Architecture](figures/fig1_protocol_architecture.png)
 
-### 3.1 Axiom 1 ($\mathcal{A}_{\text{CRS}}$): Metric & Geodesic CRS Invariant
-
-$$\text{op} \in \mathcal{O}_{\text{metric}} \implies \text{unit}(\text{CRS}_1) \in \{\text{m}, \text{ft}\} \land \neg\text{is\_geographic}(\text{CRS}_1), \qquad \mathcal{L}_2 \neq \varnothing \implies \text{CRS}_1 \equiv \text{CRS}_2$$
-
-- **Geodesic Distortion Bound:** On unprojected geographic coordinates ($\text{EPSG}:4326$) at latitude $\phi_c$, planar Euclidean operators incur a secant distortion $\delta(\phi_c) = \sec(\phi_c) - 1$.
-- **Symbolic Auto-Repair ($\mathcal{R}_{\text{CRS}}$):** Computes the centroid $(\lambda_c, \phi_c)$ and extent $(\Delta\lambda, \Delta\phi)$. For areal/mass-transfer operators ($\text{op} \in \mathcal{O}_{\text{area}}$) or regional extents ($\Delta\lambda > 6.5^\circ$), $\mathcal{R}_{\text{CRS}}$ automatically reprojects to an **Equal-Area** projection (`EPSG:5070` NAD83 Conus Albers, `EPSG:3035` LAEA Europe, or `EPSG:6933` Global EASE-Grid 2.0) where areal distortion $\delta_A \equiv 0$. For local distance/buffer operators, it selects the exact conformal UTM zone:
-  $$\text{Zone } Z = \lfloor (\lambda_c + 180)/6 \rfloor + 1, \qquad \text{EPSG} = 32600 + Z \text{ (North)} \text{ or } 32700 + Z \text{ (South)}$$
-
-### 3.2 Axiom 2 ($\mathcal{A}_{\text{MAUP}}$): Semantic Scale Type & Pycnophylactic Mass-Conservation Invariant
-
-Every attribute $X_k \in \mathcal{X}$ is classified by the semantic typing ontology $\tau(X_k) \in \{\tau_{\text{ext}}, \tau_{\text{int}}, \tau_{\text{nom}}\}$:
-- **Extensive ($\tau_{\text{ext}}$):** `population`, `households`, `cases`, `emissions_tons`, `total_jobs` (additive totals).
-- **Intensive ($\tau_{\text{int}}$):** `pop_density`, `median_income`, `poverty_rate`, `ndvi`, `pm25`, `aqi`, `temperature` (scale-invariant ratios/indices — **summation `SUM` is strictly forbidden**).
-
-$$\forall X_k \in \tau_{\text{int}}: \bigoplus_k \neq \texttt{SUM}, \qquad \forall C_k \in \tau_{\text{ext}}: \left| \sum_{s \in \mathcal{S}_{\text{cov}}} C_{s,k} - \sum_{t=1}^{K} \hat{C}_{t,k} \right| \le 10^{-5} \sum_s |C_{s,k}|$$
-
-- **Symbolic Auto-Repair ($\mathcal{R}_{\text{MAUP}}$):** Replaces naive spatial joins/dissolves with our **Hybrid Tobler Pycnophylactic & Area-Weighted Solver**:
-  $$\hat{C}_{t,k} = \sum_{s=1}^{M} C_{s,k} \frac{|A_s \cap B_t| \cdot \tilde{\rho}_k(c_{s,t})}{\sum_{t'=1}^{K} |A_s \cap B_{t'}| \cdot \tilde{\rho}_k(c_{s,t'})} \quad (\tau_{\text{ext}}), \qquad \hat{Z}_{t,k} = \frac{\sum_{s=1}^{M} |A_s \cap B_t| \cdot Z_{s,k}}{\sum_{s=1}^{M} |A_s \cap B_t|} \quad (\tau_{\text{int}})$$
-  guaranteeing **exact mass conservation** ($\sum_t \hat{C}_{t,k} = \sum_s C_{s,k}$) and **convex scale preservation** ($\min_s Z_{s,k} \le \hat{Z}_{t,k} \le \max_s Z_{s,k}$).
-
-### 3.3 Axiom 3 ($\mathcal{A}_{\text{Topo}}$): Topological 9-Intersection & Polsby–Popper Manifold Invariant
-
-$$\forall g \in \mathcal{G}: \text{is\_valid\_manifold}(g) \land \text{Area}(g) > 0 \land \left( \text{PP}(g) = \frac{4\pi \cdot \text{Area}(g)}{\text{Perimeter}(g)^2} \ge 0.005 \lor \frac{\text{Area}(g)}{\overline{\text{Area}}(\mathcal{G})} \ge 10^{-4} \right)$$
-
-- **Symbolic Auto-Repair ($\mathcal{R}_{\text{Topo}}$):** Applies constructive manifold repair (`ST_MakeValid`) to self-intersecting rings pre- and post-execution and prunes overlay micro-sliver artifacts violating the Polsby–Popper compactness bound.
-
-### 3.4 Axiom 4 ($\mathcal{A}_{\text{Stat}}$): Spatial Statistical Pre-Condition & Connectivity Invariant
-
-$$\text{op} \in \mathcal{O}_{\text{stat}} \implies \|\mathbf{y}\|_{\text{NaN}} = 0 \land \sigma^2(\mathbf{y}) > 10^{-12} \land \min_i \sum_j w_{ij} > 0 \land \kappa(\tilde{\mathbf{X}}) < 30$$
-
-- **Symbolic Auto-Repair ($\mathcal{R}_{\text{Stat}}$):** Imputes missing values with the spatial median, heals disconnected Queen/Rook contiguity islands by switching to row-standardized metric $k$-NN weights ($k = \max(3, \min(6, N-1))$), enforces $999$-permutation Monte Carlo inference when $N < 30$, and prunes collinear predictors with $\kappa(\tilde{\mathbf{X}}) > 30$.
+Prompt instructions alone do not reliably prevent these errors because LLMs do not inspect coordinate bounds, polygon intersection graphs, Polsby-Popper compactness ratios, or matrix condition numbers before emitting code. To solve this problem deterministically, we built the **Neuro-Symbolic Verifiable GeoAI Protocol (NS-VGP / VeriGeo 1.0)** (Figure 1). NS-VGP separates high-level task planning (handled by the LLM) from formal cartographic and statistical verification (handled by a symbolic engine in Python; d'Avila Garcez & Lamb, 2023).
 
 ---
 
-## 4. Empirical Evaluation & Benchmark Results ($N=60$ Workflows)
+## 2. Related Work
 
-We evaluated three paradigms across **60 diverse geospatial workflows** (15 per category):
-1. **Unconstrained LLM-Geo (`llm_geo`):** Standard zero-shot LLM GeoPandas synthesis.
-2. **Standard GAS 1.0.0 Service (`gas_baseline`):** Stateless service wrapper with basic CRS alignment (`L2.to_crs(L1.crs)`) and input `make_valid`.
-3. **Proposed NS-VGP (`ns_vgp`):** Full 4-axiom neuro-symbolic verification and self-healing engine.
+### 2.1 Autonomous GIS and Agent Interoperability
+Li & Ning (2023) defined five goals for autonomous GIS: self-generating, self-organizing, self-verifying, self-executing, and self-growing. Follow-up systems implemented code generation for spatial analysis (Akinboyewa et al., 2025), automated data retrieval (Ning et al., 2025), and conversational tool calling (Zhang et al., 2024). In 2026, Li et al. (2026) introduced Geospatial Agentic Services (GAS 1.0.0) to standardize how GIS agents expose capabilities and exchange datasets over HTTP. GAS 1.0.0 focuses on service contracts and leaves internal verification to individual agent implementations. In practice, current reference agents only check whether a Python script throws an exception. NS-VGP implements the "self-verifying" requirement from Li & Ning (2023) as a reusable middleware layer that checks mathematical invariants on input and output layers.
 
-![Figure 2: Quantitative Benchmark Comparison](figures/fig2_benchmark_comparison.png)
+### 2.2 Semantic Typing in Geoprocessing Workflows
+Kuhn (2012) proposed core concepts of spatial information to formalize geographic meaning independent of software storage formats. Building on Kuhn's framework, Scheider & Ballatore (2017), Scheider et al. (2020), and Meerlo et al. (2021) developed Core Concept Data Types (CCD) to prevent invalid tool combinations during automated workflow synthesis. Their ontology distinguishes *extensive* attributes (which accumulate with spatial support area, such as total population) from *intensive* attributes (which are independent of area, such as population density or temperature). While prior work used these types in logic-based workflow planners (such as APE), NS-VGP applies intensive and extensive typing at runtime to intercept and repair spatial joins and polygon dissolves generated by LLMs.
 
-| Task Category ($N=15$ each) | GeoAI Paradigm | Syntactic Exec. (%) | Verified Scientific Validity (%) | Mean Area Error (%) | Extensive Mass Error (%) | Intensive Inflation ($\times$) | Mean Latency ($\text{ms} \pm \text{SD}$) |
+### 2.3 MAUP and Pycnophylactic Areal Interpolation
+Openshaw (1984) showed that aggregating point or polygon data into different zonal boundaries alters summary statistics and regression coefficients, a phenomenon known as the Modifiable Areal Unit Problem (MAUP). When transferring data between incongruent polygon sets, Goodchild & Lam (1980) and Goodchild et al. (1993) formulated area-weighted and dasymetric areal interpolation. Earlier, Tobler (1979) introduced smooth pycnophylactic interpolation, which computes a smooth density surface $\rho(x,y)$ over a grid while preserving the exact initial count within each source polygon ($\iint_{A_s} \rho(x,y)\,dx\,dy = C_s$, $\rho(x,y) \ge 0$). NS-VGP combines Tobler's iterative Laplacian surface with polygon intersection weights so that extensive counts are conserved to floating-point precision while intensive ratios are integrated by overlap area.
+
+---
+
+## 3. Formal Specification of the Four Spatial Axioms
+
+We represent a single geoprocessing step as $W = (\text{op}, \mathcal{L}_1, \mathcal{L}_2, \Theta)$, where $\text{op}$ is the operator name, $\mathcal{L}_1 = (\mathcal{G}_1, \mathcal{X}_1, \text{CRS}_1)$ is the primary vector layer with geometries $\mathcal{G}_1 = \{g_1, \dots, g_M\}$, attribute table $\mathcal{X}_1$, and coordinate reference system $\text{CRS}_1$, $\mathcal{L}_2$ is an optional secondary layer, and $\Theta$ is the dictionary of operator parameters.
+
+### 3.1 Axiom 1: Metric and Geodesic CRS Invariant ($\mathcal{A}_{\text{CRS}}$)
+
+Let $\mathcal{O}_{\text{metric}}$ be the set of operators that compute Euclidean distances, areas, spatial weights, or polygon overlays (`buffer`, `area`, `length`, `distance`, `nearest`, `areal_interpolation`, `spatial_join`, `dissolve`, `intersection`, `morans_i`, `lisa`, `gwr`), and let $\mathcal{O}_{\text{area}} \subset \mathcal{O}_{\text{metric}}$ be the subset requiring equal-area preservation (`area`, `areal_interpolation`, `spatial_join`, `dissolve`). A workflow step $W$ satisfies $\mathcal{A}_{\text{CRS}}$ if and only if:
+
+$$\text{op} \in \mathcal{O}_{\text{metric}} \implies \text{unit}(\text{CRS}_1) \in \{\text{m}, \text{ft}\} \land \neg\text{is\_geographic}(\text{CRS}_1), \qquad \mathcal{L}_2 \neq \varnothing \implies \text{CRS}_1 = \text{CRS}_2$$
+
+**Distortion Calculation and Repair ($\mathcal{R}_{\text{CRS}}$):** When $\mathcal{L}_1$ is stored in `EPSG:4326` with bounding-box center $(\lambda_c, \phi_c)$ and spans $(\Delta\lambda, \Delta\phi)$, planar calculations in degree coordinates stretch East-West distances by the secant factor $\sec(\phi_c) = 1/\cos(\phi_c)$, producing a first-order areal distortion of $\delta_A(\phi_c) = (\sec(\phi_c) - 1) \times 100\%$. If $\mathcal{A}_{\text{CRS}}$ fails, $\mathcal{R}_{\text{CRS}}$ reprojects both $\mathcal{L}_1$ and $\mathcal{L}_2$ to $\text{CRS}^*$:
+- `EPSG:5070` (NAD83 Conus Albers Equal-Area) if $(\text{op} \in \mathcal{O}_{\text{area}} \lor \Delta\lambda > 6.5^\circ)$ and the bounding box lies in North America;
+- `EPSG:3035` (ETRS89 LAEA Europe) if $(\text{op} \in \mathcal{O}_{\text{area}} \lor \Delta\lambda > 6.5^\circ)$ and the bounding box lies in Europe;
+- `EPSG:6933` (WGS 84 EASE-Grid 2.0 Global Equal-Area) for all other equal-area or wide-span operations;
+- Local conformal UTM zone `EPSG:(32600 + Z)` (Northern Hemisphere) or `EPSG:(32700 + Z)` (Southern Hemisphere), where $Z = \lfloor (\lambda_c + 180)/6 \rfloor + 1 \in \{1,\dots,60\}$, for local distance and buffer operations.
+
+### 3.2 Axiom 2: Semantic Scale Type and MAUP Mass Conservation ($\mathcal{A}_{\text{MAUP}}$)
+
+The classifier $\tau(X_k) \in \{\tau_{\text{ext}}, \tau_{\text{int}}, \tau_{\text{nom}}\}$ (`verigeo/protocol.py`, lines 115–242) assigns each column in $\mathcal{X}_1$ using lexical rules followed by value-range inspection:
+- **Nominal ($\tau_{\text{nom}}$):** Identifiers matching `id`, `fid`, `geoid`, `fips`, `code`, `name`, `type`, `zone`, or string/object columns.
+- **Intensive ($\tau_{\text{int}}$):** Scale-invariant ratios, densities, rates, temperatures, and spectral indices matching `rate`, `density`, `pct`, `ratio`, `index`, `mean`, `median`, `per_capita`, `ndvi`, `evi`, `lst`, `temp`, `aqi`, `pm25`, `income`, `poverty`, or fractional values bounded in $[-1, 1]$ or $[0, 100]$. Intensive patterns are evaluated before extensive patterns so compound column names such as `pop_density` or `crime_rate` are classified as $\tau_{\text{int}}$.
+- **Extensive ($\tau_{\text{ext}}$):** Additive totals matching `pop`, `population`, `total`, `count`, `households`, `cases`, `emissions`, `tons`, `crimes`, `jobs`, or non-negative integer counts.
+
+For any zonal aggregation or polygon-to-polygon transfer from source polygons $\{A_s\}_{s=1}^M$ to target polygons $\{B_t\}_{t=1}^K$ with aggregation operator $\bigoplus_k$:
+
+$$\forall X_k \text{ with } \tau(X_k) = \tau_{\text{int}}: \quad \bigoplus_k \neq \texttt{SUM}, \qquad \forall C_k \text{ with } \tau(C_k) = \tau_{\text{ext}}: \quad \left| \sum_{s \in \mathcal{S}_{\text{cov}}} C_{s,k} - \sum_{t=1}^{K} \hat{C}_{t,k} \right| \le \varepsilon_{\text{mass}}$$
+
+where $\mathcal{S}_{\text{cov}} = \{s : |A_s \cap \bigcup_{t=1}^K B_t| > 0\}$ and $\varepsilon_{\text{mass}} = 10^{-5} \sum_{s \in \mathcal{S}_{\text{cov}}} |C_{s,k}|$.
+
+**Pycnophylactic and Area-Weighted Repair ($\mathcal{R}_{\text{MAUP}}$):** Both layers are projected to an equal-area CRS. For each extensive column $C_k$, a density surface $\rho_k^{(r)}(x,y) \ge 0$ is computed on a $40 \times 40$ grid over $R = 35$ iterations of discrete 4-neighbor Laplacian smoothing ($\omega = 0.8$):
+
+$$\tilde{\rho}_{i,j}^{(r)} = \max\!\left(0,\, (1-\omega)\rho_{i,j}^{(r-1)} + \frac{\omega}{4}\left(\rho_{i+1,j}^{(r-1)} + \rho_{i-1,j}^{(r-1)} + \rho_{i,j+1}^{(r-1)} + \rho_{i,j-1}^{(r-1)}\right)\right)$$
+
+followed at each step by zone-wise mass rescaling $\rho_{i,j}^{(r)} = \tilde{\rho}_{i,j}^{(r)} \cdot C_{s,k} / \sum_{(u,v) \in A_s} \tilde{\rho}_{u,v}^{(r)}$. Let $c_{s,t}$ be the centroid of intersection piece $A_s \cap B_t$ with area $a_{s,t} = |A_s \cap B_t|$ and weight $w_{s,t} = a_{s,t} \cdot \max(\rho_k^{(R)}(c_{s,t}), 10^{-6})$. The repaired target values are:
+
+$$\hat{C}_{t,k} = \sum_{s=1}^{M} C_{s,k} \frac{w_{s,t}}{\sum_{t'=1}^{K} w_{s,t'}} \quad (\tau_{\text{ext}}), \qquad \hat{Z}_{t,k} = \frac{\sum_{s=1}^{M} a_{s,t} Z_{s,k}}{\sum_{s=1}^{M} a_{s,t}} \quad (\tau_{\text{int}})$$
+
+Summing $\hat{C}_{t,k}$ over $t = 1,\dots,K$ yields $\sum_{t=1}^K \hat{C}_{t,k} = \sum_{s \in \mathcal{S}_{\text{cov}}} C_{s,k}$, conserving covered population mass to floating-point precision while keeping $\hat{Z}_{t,k} \in [\min_s Z_{s,k}, \max_s Z_{s,k}]$.
+
+### 3.3 Axiom 3: Topological 9-Intersection and Sliver Invariant ($\mathcal{A}_{\text{Topo}}$)
+
+Every geometry $g \in \mathcal{G}$ must be non-empty, valid under the OGC Simple Features / Egenhofer 9-intersection rules (`g.is_valid == True`), and for polygon overlay outputs (`intersection`, `difference`, `sym_difference`), every polygon must satisfy either the Polsby-Popper compactness threshold or the relative area threshold:
+
+$$\text{PP}(g) = \frac{4\pi \cdot \text{Area}(g)}{\text{Perimeter}(g)^2} \ge 0.005 \quad \lor \quad \frac{\text{Area}(g)}{\overline{\text{Area}}(\mathcal{G})} \ge 10^{-4}$$
+
+### 3.4 Axiom 4: Spatial Statistical Pre-Conditions ($\mathcal{A}_{\text{Stat}}$)
+
+For spatial statistical operators $\text{op} \in \{\text{morans\_i}, \text{lisa}, \text{getis\_ord}, \text{gwr}\}$ on target vector $\mathbf{y} \in \mathbb{R}^N$, spatial weights matrix $\mathbf{W} \in \mathbb{R}^{N \times N}$, and predictor matrix $\mathbf{X} \in \mathbb{R}^{N \times p}$:
+1. $\mathbf{y}$ contains no `NaN` or $\pm\infty$ entries and $\text{Var}(\mathbf{y}) > 10^{-12}$.
+2. Every spatial unit has at least one neighbor: $\forall i \in \{1,\dots,N\},\, \sum_{j=1}^N w_{ij} > 0$.
+3. Sample size satisfies $N \ge 30$ for normal approximation, or conditional Monte Carlo permutation ($P \ge 999$) is used when $10 \le N < 30$.
+4. For multivariate regression (`gwr`), the standardized design matrix $\tilde{\mathbf{X}}$ has condition number $\kappa(\tilde{\mathbf{X}}) < 30$.
+
+---
+
+## 4. Experimental Methodology and Empirical Results
+
+### 4.1 Test Environment and Benchmark Protocol
+All experiments were run on Windows using Python `3.11.9`, GeoPandas `1.1.4`, NumPy `1.26.4`, Shapely `2.0+`, PyProj `3.6+`, and Pytest `9.1.1` with deterministic seed `np.random.default_rng(42)`. The benchmark script `benchmarks/run_experiments.py` constructs $60$ tasks ($15$ per category) and runs each task under three modes (`llm_geo`, `gas_baseline`, `ns_vgp`) plus four single-axiom ablations (`no_A_CRS`, `no_A_MAUP`, `no_A_TOPO`, `no_A_STAT`), totaling $420$ executions. All $180$ main runs are logged row-by-row in `benchmarks/per_task_validation_log.csv`.
+
+![Figure 2: Benchmark Comparison](figures/fig2_benchmark_comparison.png)
+
+| Task Category ($N=15$ each) | Execution Mode | No-Crash Rate (%) | Verified Valid (%) | Mean Area Error (%) | Extensive Mass Error (%) | Intensive Inflation ($\times$) | Mean Latency ($\text{ms} \pm \text{SD}$) |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **1. Metric & Geodesic CRS** | LLM-Geo (Unconstrained) | 100.0% | 0.0% | 49.33% | 0.00% | $1.00\times$ | $0.23 \pm 0.11$ |
-| | GAS 1.0.0 (Standard Service) | 100.0% | 0.0% | 44.33% | 0.00% | $1.00\times$ | $0.54 \pm 0.23$ |
-| | **NS-VGP (Ours)** | **100.0%** | **100.0%** | **0.00%** | **0.00%** | **$1.00\times$** | **$40.57 \pm 24.36$** |
-| **2. MAUP & Areal Interpolation** | LLM-Geo (Unconstrained) | 100.0% | 0.0% | 28.40% | 86.91% | $4.00\times$ | $24.96 \pm 14.76$ |
-| | GAS 1.0.0 (Standard Service) | 100.0% | 0.0% | 28.40% | 86.91% | $4.00\times$ | $26.93 \pm 9.90$ |
-| | **NS-VGP (Ours)** | **100.0%** | **100.0%** | **0.00%** | **0.000%** | **$1.00\times$** | **$292.02 \pm 175.35$** |
-| **3. Topological Manifold & Slivers** | LLM-Geo (Unconstrained) | 0.0% | 0.0% | — | — | — | $56.88 \pm 17.36$ |
-| | GAS 1.0.0 (Standard Service) | 100.0% | 0.0% | 0.00% | 0.00% | $1.00\times$ | $0.33 \pm 0.07$ |
-| | **NS-VGP (Ours)** | **100.0%** | **100.0%** | **0.00%** | **0.00%** | **$1.00\times$** | **$73.00 \pm 17.83$** |
-| **4. Spatial Statistical Pre-Conditions** | LLM-Geo (Unconstrained) | 0.0% | 0.0% | — | — | — | $0.52 \pm 0.29$ |
-| | GAS 1.0.0 (Standard Service) | 33.3% | 0.0% | — | — | — | $0.16 \pm 0.03$ |
-| | **NS-VGP (Ours)** | **100.0%** | **100.0%** | **0.00%** | **0.00%** | **$1.00\times$** | **$19.37 \pm 3.42$** |
-| **Overall Benchmark ($N=60$)** | LLM-Geo (Unconstrained) | 50.0% | 0.0% | 38.87% | 86.91% | $4.00\times$ | $20.65 \pm 25.85$ |
-| | GAS 1.0.0 (Standard Service) | 83.3% | 0.0% | 36.37% | 86.91% | $4.00\times$ | $6.99 \pm 12.53$ |
-| | **NS-VGP (Ours)** | **100.0%** | **100.0%** | **0.00%** | **0.000%** | **$1.00\times$** | **$106.24 \pm 140.67$** |
+| **1. Metric & Geodesic CRS** | LLM-Geo (Unconstrained) | 100.0% | 0.0% | 53.25% | 0.000% | $1.00\times$ | $0.68 \pm 0.34$ |
+| | GAS 1.0.0 (Standard Service) | 100.0% | 0.0% | 48.25% | 0.000% | $1.00\times$ | $0.21 \pm 0.09$ |
+| | **VeriGeo / NS-VGP (Ours)** | **100.0%** | **100.0%** | **0.00%** | **0.000%** | **$1.00\times$** | **$24.25 \pm 17.99$** |
+| **2. MAUP & Areal Interpolation** | LLM-Geo (Unconstrained) | 100.0% | 0.0% | 28.40% | 86.914% | $4.00\times$ | $21.48 \pm 11.24$ |
+| | GAS 1.0.0 (Standard Service) | 100.0% | 0.0% | 28.40% | 86.914% | $4.00\times$ | $12.22 \pm 1.34$ |
+| | **VeriGeo / NS-VGP (Ours)** | **100.0%** | **100.0%** | **0.00%** | **0.000%** | **$1.00\times$** | **$174.99 \pm 103.26$** |
+| **3. Topological Manifold & Slivers** | LLM-Geo (Unconstrained) | 0.0% | 0.0% | — | — | — | $29.47 \pm 3.39$ |
+| | GAS 1.0.0 (Standard Service) | 100.0% | 0.0% | 0.00% | 0.000% | $1.00\times$ | $0.29 \pm 0.04$ |
+| | **VeriGeo / NS-VGP (Ours)** | **100.0%** | **100.0%** | **0.00%** | **0.000%** | **$1.00\times$** | **$50.99 \pm 7.31$** |
+| **4. Spatial Statistical Pre-Conditions** | LLM-Geo (Unconstrained) | 0.0% | 0.0% | — | — | — | $0.16 \pm 0.02$ |
+| | GAS 1.0.0 (Standard Service) | 33.3% | 0.0% | — | — | — | $0.19 \pm 0.06$ |
+| | **VeriGeo / NS-VGP (Ours)** | **100.0%** | **100.0%** | **0.00%** | **0.000%** | **$1.00\times$** | **$19.04 \pm 1.83$** |
+| **All Categories ($N=60$)** | LLM-Geo (Unconstrained) | 50.0% | 0.0% | 40.83% | 86.914% | $4.00\times$ | $12.95 \pm 14.12$ |
+| | GAS 1.0.0 (Standard Service) | 83.3% | 0.0% | 38.33% | 86.914% | $4.00\times$ | $3.23 \pm 5.23$ |
+| | **VeriGeo / NS-VGP (Ours)** | **100.0%** | **100.0%** | **0.00%** | **0.000%** | **$1.00\times$** | **$67.32 \pm 82.29$** |
 
 ---
 
-## 5. Cartographic Case Study & Ablation Analysis
+### 4.2 Granular Task-by-Task Validation Log (`per_task_validation_log.csv`)
 
-![Figure 3: MAUP & Pycnophylactic Areal Interpolation Case Study](figures/fig3_maup_pycnophylactic_case_study.png)
+The table below shows exact empirical records extracted directly from `benchmarks/per_task_validation_log.csv`:
 
-**Figure 3** demonstrates how standard GeoAI agents corrupt socioeconomic data during polygon-to-polygon spatial joins (`MAUP-01`):
-- **Source Tracts (Panel a):** $16$ census tracts with a true total population of $84,658$ and mean median income of $\$78,321$.
-- **Unverified Spatial Join Population Duplication (Panel b):** Standard `gpd.sjoin(..., predicate="intersects")` counts every tract intersecting multiple target zones multiple times, inflating total population to $205,274$ (**$+142.5\%$ mass error**).
-- **Ecological Fallacy on Median Income (Panel c):** Summing `median_income` across intersecting tracts inflates mean target zone income to $\$269,759$ (**$3.44\times$ ecological fallacy inflation**).
-- **NS-VGP Pycnophylactic & Area-Weighted Repair (Panel d):** Preserves the exact population total of **$84,658$ ($0.000\%$ mass error)** and true intensive income scale (**$\$78,321$**).
-
-![Figure 4: 4-Axiom Ablation Study and Verification Latency](figures/fig4_ablation_and_latency.png)
-
-As shown in **Figure 4(a)**, removing $\mathcal{A}_{\text{CRS}}$ drops overall scientific validity from $100.0\%$ to $25.0\%$, while removing $\mathcal{A}_{\text{MAUP}}$, $\mathcal{A}_{\text{Topo}}$, or $\mathcal{A}_{\text{Stat}}$ each reduces overall validity to $75.0\%$. **Figure 4(b)** confirms that the entire neuro-symbolic verification and self-healing cycle completes in an average of **$106.24\text{ ms}$** ($19.4\text{--}292.0\text{ ms}$ across categories), adding negligible latency compared to LLM token generation.
+| Task ID | Operator & Setup | Unverified Output (`llm_geo` / `gas_baseline`) | NS-VGP Verified Output & Symbolic Repair Trace | Error Before $\to$ After | Certificate ID | Latency (ms) |
+| :--- | :--- | :--- | :--- | :---: | :---: | :---: |
+| `CRS-01` | `clip_and_area` ($\phi=12.0^\circ\text{N}$) | CRS mismatch (`EPSG:4326` vs `3857`); $\sec(12^\circ)=1.0223$ | Reprojected layers from (`EPSG:4326`, `EPSG:3857`) to `EPSG:32611` (UTM) | $17.23\% \to 0.00\%$ | `SPC-D789FCF50DC0` | $45.93$ |
+| `CRS-06` | `area` ($\phi=37.8^\circ\text{N}$) | Unprojected `EPSG:4326`; $\sec(37.8^\circ)=1.2656$ | Reprojected to `EPSG:5070` (CONUS Albers Equal-Area) | $26.56\% \to 0.00\%$ | `SPC-14882EF45229` | $81.47$ |
+| `CRS-07` | `clip_and_area` ($\phi=40.8^\circ\text{N}$) | Unprojected `EPSG:4326`; $\sec(40.8^\circ)=1.3210$ | Reprojected layers from (`EPSG:4326`, `EPSG:3857`) to `EPSG:32618` | $47.10\% \to 0.00\%$ | `SPC-350B660AD388` | $26.82$ |
+| `CRS-12` | `area` ($\phi=55.7^\circ\text{N}$) | Unprojected `EPSG:4326`; $\sec(55.7^\circ)=1.7745$ | Reprojected to `EPSG:6933` (Global Equal-Area) | $77.45\% \to 0.00\%$ | `SPC-919A0E014E7D` | $11.11$ |
+| `CRS-15` | `buffer` ($1000\text{ m}$, $\phi=64.1^\circ\text{N}$) | Unprojected `EPSG:4326`; $\sec(64.1^\circ)=2.2894$ | Reprojected to local UTM Zone `EPSG:32628` | $128.94\% \to 0.00\%$ | `SPC-803EB03E6513` | $13.64$ |
+| `MAUP-01` | `spatial_join` ($16 \to 9$ zones) | True pop $=79,902$, `sjoin` sum $=198,394$ ($+148.30\%$); True inc $=\$78,179$, `sjoin` sum $=\$296,699$ ($3.80\times$) | Reprojected to `EPSG:5070`; pycnophylactic pop $=79,902.000$; area-weighted inc $=\$78,179.0$ | $148.30\% \to 0.000\%$ | `SPC-534A31C1152B` | $213.92$ |
+| `MAUP-02` | `spatial_join` ($16 \to 9$ zones) | True pop $=85,776$, `sjoin` sum $=200,236$ ($+133.44\%$); True inc $=\$81,838$, `sjoin` sum $=\$326,194$ ($3.99\times$) | Reprojected to `EPSG:5070`; pycnophylactic pop $=85,776.000$; area-weighted inc $=\$81,838.0$ | $133.44\% \to 0.000\%$ | `SPC-4DA9C249FA8B` | $203.01$ |
+| `MAUP-03` | `dissolve` ($16 \to 4$ districts) | Dissolve summed intensive `median_income`: $\$317,121$ vs true $\$79,280$ ($4.00\times$) | Blocked `SUM` on $\tau_{\text{int}}$; computed area-weighted district income $\$79,280.0$ | $4.00\times \to 1.00\times$ | `SPC-2499A81F1722` | $45.48$ |
+| `MAUP-08` | `spatial_join` ($16 \to 9$ zones) | True pop $=91,149$, `sjoin` sum $=213,969$ ($+134.75\%$); True inc $=\$90,494$, `sjoin` sum $=\$372,158$ ($4.11\times$) | Reprojected to `EPSG:5070`; pycnophylactic pop $=91,149.000$; area-weighted inc $=\$90,494.0$ | $134.75\% \to 0.000\%$ | `SPC-13DC8248BDF8` | $169.95$ |
+| `TOPO-01` | `intersection` ($4$ parcels) | Input bowtie self-intersection + boundary sliver ($\text{PP}=0.00008 < 0.005$) | Repaired 1 bowtie via `ST_MakeValid`; reprojected to `EPSG:32618`; pruned 1 sliver ($3 \to 2$ features) | Sliver $\to 0$ | `SPC-8598E46CE735` | $49.27$ |
+| `STAT-01` | `gwr` ($N=16$, $2$ islands) | `NaN` at index 2; 2 Queen islands; collinear $\kappa(\tilde{\mathbf{X}})=120,146.1$ | Imputed median $52.422$; built $k$-NN ($k=4$) in `EPSG:32618`; pruned `x1` ($\kappa \to 1.00$); $999$ perms | Invalid $\to$ Valid | `SPC-104F4F4E330C` | $19.35$ |
+| `STAT-06` | `morans_i` ($N=24$, $2$ islands) | `NaN` at index 2; 2 disconnected Queen contiguity islands | Imputed median $60.467$; built row-standardized $k$-NN ($k=5$) in `EPSG:32618`; $999$ perms | Invalid $\to$ Valid | `SPC-5C352FD41F5A` | $18.45$ |
 
 ---
 
-## 6. Key References (Verified DOIs)
+### 4.3 Cartographic Case Study (`MAUP-01`) and Ablation Analysis
+
+![Figure 3: MAUP Case Study](figures/fig3_maup_pycnophylactic_case_study.png)
+
+Figure 3 shows the spatial distribution on task `MAUP-01`:
+- **Panel (a):** The $16$ source census tracts have a true total population of $79,902$ and a mean median household income of $\$78,179$.
+- **Panel (b):** Running `gpd.sjoin(zones, tracts, predicate="intersects")` followed by `.groupby("zone_id").sum()` counts every boundary-straddling tract multiple times, producing a total population of $198,394$ ($+148.30\%$ error).
+- **Panel (c):** Summing `median_income` across intersecting tracts inflates the mean zone income to $\$296,699$ ($3.80\times$ inflation).
+- **Panel (d):** NS-VGP reprojects both layers to `EPSG:5070`, runs $35$ iterations of Tobler's pycnophylactic smoothing for `population` and `households`, and computes area-weighted averages for `median_income`, `pop_density`, `pm25`, and `ndvi`. The resulting target layer has an exact total population of $79,902.0$ ($0.000\%$ error) and a mean income of $\$78,179$.
+
+![Figure 4: Ablation and Latency](figures/fig4_ablation_and_latency.png)
+
+Figure 4(a) plots the single-axiom ablation results across all $60$ workflows. Disabling $\mathcal{A}_{\text{CRS}}$ reduces verified validity from $100.0\%$ to $25.0\%$ because $45$ of the $60$ workflows (Categories 1, 2, and 4) depend on metric coordinates. Disabling $\mathcal{A}_{\text{MAUP}}$, $\mathcal{A}_{\text{Topo}}$, or $\mathcal{A}_{\text{Stat}}$ each drops validity from $100.0\%$ to $75.0\%$. Figure 4(b) shows that the verification and repair runtime is $24.25 \pm 17.99\text{ ms}$ for $\mathcal{A}_{\text{CRS}}$, $174.99 \pm 103.26\text{ ms}$ for $\mathcal{A}_{\text{MAUP}}$, $50.99 \pm 7.31\text{ ms}$ for $\mathcal{A}_{\text{Topo}}$, and $19.04 \pm 1.83\text{ ms}$ for $\mathcal{A}_{\text{Stat}}$ ($67.32\text{ ms}$ overall mean).
+
+---
+
+## 5. References
 
 1. **Li, Z., Khosravi Kazazi, A., Liu, R., Akinboyewa, T., Ning, H., et al. (2026).** Geospatial Agentic Services: A Framework for Interoperable Geospatial Intelligence. *Annals of GIS*. DOI: [10.1080/19475683.2026.2738374](https://doi.org/10.1080/19475683.2026.2738374)
 2. **Li, Z., & Ning, H. (2023).** Autonomous GIS: the next-generation AI-powered GIS. *International Journal of Digital Earth*, 16(2), 4668–4686. DOI: [10.1080/17538947.2023.2278895](https://doi.org/10.1080/17538947.2023.2278895)

@@ -1,6 +1,12 @@
 {
   "protocol_version": "NS-VGP/1.0.0",
+  "environment": {
+    "python": "3.11.9",
+    "geopandas": "1.1.4",
+    "numpy": "1.26.4"
+  },
   "total_workflows_evaluated": 60,
+  "total_runs_logged": 180,
   "overall": {
     "llm_geo": {
       "total_tasks": 60,
@@ -9,8 +15,8 @@
       "maup_valid_pct": 75.0,
       "topo_valid_pct": 75.0,
       "stat_valid_pct": 75.0,
-      "mean_latency_ms": 20.65,
-      "std_latency_ms": 25.85
+      "mean_latency_ms": 12.95,
+      "std_latency_ms": 14.12
     },
     "gas_baseline": {
       "total_tasks": 60,
@@ -19,8 +25,8 @@
       "maup_valid_pct": 75.0,
       "topo_valid_pct": 75.0,
       "stat_valid_pct": 75.0,
-      "mean_latency_ms": 6.99,
-      "std_latency_ms": 12.53
+      "mean_latency_ms": 3.23,
+      "std_latency_ms": 5.23
     },
     "ns_vgp": {
       "total_tasks": 60,
@@ -29,8 +35,8 @@
       "maup_valid_pct": 100.0,
       "topo_valid_pct": 100.0,
       "stat_valid_pct": 100.0,
-      "mean_latency_ms": 106.24,
-      "std_latency_ms": 140.67
+      "mean_latency_ms": 67.32,
+      "std_latency_ms": 82.29
     }
   },
   "by_category": {
@@ -42,11 +48,11 @@
         "maup_valid_pct": 100.0,
         "topo_valid_pct": 100.0,
         "stat_valid_pct": 100.0,
-        "mean_area_error_pct": 49.33,
+        "mean_area_error_pct": 53.25,
         "mean_mass_error_pct": 0.0,
         "mean_intensive_inflation": 1.0,
-        "mean_latency_ms": 0.23,
-        "std_latency_ms": 0.11
+        "mean_latency_ms": 0.68,
+        "std_latency_ms": 0.34
       },
       "gas_baseline": {
         "num_tasks": 15,
@@ -55,11 +61,11 @@
         "maup_valid_pct": 100.0,
         "topo_valid_pct": 100.0,
         "stat_valid_pct": 100.0,
-        "mean_area_error_pct": 44.33,
+        "mean_area_error_pct": 48.25,
         "mean_mass_error_pct": 0.0,
         "mean_intensive_inflation": 1.0,
-        "mean_latency_ms": 0.54,
-        "std_latency_ms": 0.23
+        "mean_latency_ms": 0.21,
+        "std_latency_ms": 0.09
       },
       "ns_vgp": {
         "num_tasks": 15,
@@ -71,8 +77,8 @@
         "mean_area_error_pct": 0.0,
         "mean_mass_error_pct": 0.0,
         "mean_intensive_inflation": 1.0,
-        "mean_latency_ms": 40.57,
-        "std_latency_ms": 24.36
+        "mean_latency_ms": 24.25,
+        "std_latency_ms": 17.99
       }
     },
     "MAUP & Areal Interpolation": {
@@ -86,8 +92,8 @@
         "mean_area_error_pct": 0.0,
         "mean_mass_error_pct": 86.914,
         "mean_intensive_inflation": 4.0,
-        "mean_latency_ms": 24.96,
-        "std_latency_ms": 14.76
+        "mean_latency_ms": 21.48,
+        "std_latency_ms": 11.24
       },
       "gas_baseline": {
         "num_tasks": 15,
@@ -99,8 +105,8 @@
         "mean_area_error_pct": 0.0,
         "mean_mass_error_pct": 86.914,
         "mean_intensive_inflation": 4.0,
-        "mean_latency_ms": 26.93,
-        "std_latency_ms": 9.9
+        "mean_latency_ms": 12.22,
+        "std_latency_ms": 1.34
       },
       "ns_vgp": {
         "num_tasks": 15,
@@ -112,8 +118,8 @@
         "mean_area_error_pct": 0.0,
         "mean_mass_error_pct": 0.0,
         "mean_intensive_inflation": 1.0,
-        "mean_latency_ms": 292.02,
-        "std_latency_ms": 175.35
+        "mean_latency_ms": 174.99,
+        "std_latency_ms": 103.26
       }
     },
     "Topological Manifold & Slivers": {
@@ -127,8 +133,8 @@
         "mean_area_error_pct": 0.0,
         "mean_mass_error_pct": 0.0,
         "mean_intensive_inflation": 1.0,
-        "mean_latency_ms": 56.88,
-        "std_latency_ms": 17.36
+        "mean_latency_ms": 29.47,
+        "std_latency_ms": 3.39
       },
       "gas_baseline": {
         "num_tasks": 15,
@@ -140,8 +146,8 @@
         "mean_area_error_pct": 0.0,
         "mean_mass_error_pct": 0.0,
         "mean_intensive_inflation": 1.0,
-        "mean_latency_ms": 0.33,
-        "std_latency_ms": 0.07
+        "mean_latency_ms": 0.29,
+        "std_latency_ms": 0.04
       },
       "ns_vgp": {
         "num_tasks": 15,
@@ -153,8 +159,8 @@
         "mean_area_error_pct": 0.0,
         "mean_mass_error_pct": 0.0,
         "mean_intensive_inflation": 1.0,
-        "mean_latency_ms": 73.0,
-        "std_latency_ms": 17.83
+        "mean_latency_ms": 51.0,
+        "std_latency_ms": 7.29
       }
     },
     "Spatial Statistical Pre-Conditions": {
@@ -168,8 +174,8 @@
         "mean_area_error_pct": 0.0,
         "mean_mass_error_pct": 0.0,
         "mean_intensive_inflation": 1.0,
-        "mean_latency_ms": 0.52,
-        "std_latency_ms": 0.29
+        "mean_latency_ms": 0.16,
+        "std_latency_ms": 0.02
       },
       "gas_baseline": {
         "num_tasks": 15,
@@ -181,8 +187,8 @@
         "mean_area_error_pct": 0.0,
         "mean_mass_error_pct": 0.0,
         "mean_intensive_inflation": 1.0,
-        "mean_latency_ms": 0.16,
-        "std_latency_ms": 0.03
+        "mean_latency_ms": 0.19,
+        "std_latency_ms": 0.06
       },
       "ns_vgp": {
         "num_tasks": 15,
@@ -194,8 +200,8 @@
         "mean_area_error_pct": 0.0,
         "mean_mass_error_pct": 0.0,
         "mean_intensive_inflation": 1.0,
-        "mean_latency_ms": 19.37,
-        "std_latency_ms": 3.42
+        "mean_latency_ms": 19.04,
+        "std_latency_ms": 1.83
       }
     }
   },
@@ -205,5 +211,211 @@
     "no_A_MAUP": 75.0,
     "no_A_TOPO": 75.0,
     "no_A_STAT": 75.0
-  }
+  },
+  "sample_per_task_traces": [
+    {
+      "task_id": "CRS-01",
+      "category": "Metric & Geodesic CRS",
+      "operator": "clip_and_area",
+      "mode": "ns_vgp",
+      "scientifically_valid": true,
+      "crs_valid": true,
+      "maup_valid": true,
+      "topo_valid": true,
+      "stat_valid": true,
+      "area_error_pct": 0.0,
+      "mass_error_pct": 0.0,
+      "intensive_inflation": 1.0,
+      "latency_ms": 45.934,
+      "certificate_id": "SPC-D789FCF50DC0",
+      "validation_notes": "[A_CRS] Reprojected layers from (EPSG:4326, EPSG:3857) to metric CRS EPSG:32611 (Conformal UTM)."
+    },
+    {
+      "task_id": "CRS-06",
+      "category": "Metric & Geodesic CRS",
+      "operator": "area",
+      "mode": "ns_vgp",
+      "scientifically_valid": true,
+      "crs_valid": true,
+      "maup_valid": true,
+      "topo_valid": true,
+      "stat_valid": true,
+      "area_error_pct": 0.0,
+      "mass_error_pct": 0.0,
+      "intensive_inflation": 1.0,
+      "latency_ms": 81.472,
+      "certificate_id": "SPC-14882EF45229",
+      "validation_notes": "[A_CRS] Reprojected layers from (EPSG:4326, EPSG:4326) to metric CRS EPSG:5070 (Equal-Area)."
+    },
+    {
+      "task_id": "CRS-11",
+      "category": "Metric & Geodesic CRS",
+      "operator": "buffer",
+      "mode": "ns_vgp",
+      "scientifically_valid": true,
+      "crs_valid": true,
+      "maup_valid": true,
+      "topo_valid": true,
+      "stat_valid": true,
+      "area_error_pct": 0.0,
+      "mass_error_pct": 0.0,
+      "intensive_inflation": 1.0,
+      "latency_ms": 13.091,
+      "certificate_id": "SPC-05965DE6BCDA",
+      "validation_notes": "[A_CRS] Reprojected layers from (EPSG:4326, EPSG:4326) to metric CRS EPSG:32623 (Conformal UTM)."
+    },
+    {
+      "task_id": "MAUP-01",
+      "category": "MAUP & Areal Interpolation",
+      "operator": "spatial_join",
+      "mode": "ns_vgp",
+      "scientifically_valid": true,
+      "crs_valid": true,
+      "maup_valid": true,
+      "topo_valid": true,
+      "stat_valid": true,
+      "area_error_pct": 0.0,
+      "mass_error_pct": 0.0,
+      "intensive_inflation": 1.0,
+      "latency_ms": 213.923,
+      "certificate_id": "SPC-534A31C1152B",
+      "validation_notes": "[A_CRS] Reprojected layers from (EPSG:4326, EPSG:4326) to metric CRS EPSG:5070 (Equal-Area).; [A_MAUP] Blocked illegal aggregation (sum); enforced Tobler Pycnophylactic Mass-Preserving Interpolation for extensive ['population', 'households'] and Area-Weighted Integral Average for intensive ['pop_density', 'median_income', 'pm25', 'ndvi']."
+    },
+    {
+      "task_id": "MAUP-06",
+      "category": "MAUP & Areal Interpolation",
+      "operator": "dissolve",
+      "mode": "ns_vgp",
+      "scientifically_valid": true,
+      "crs_valid": true,
+      "maup_valid": true,
+      "topo_valid": true,
+      "stat_valid": true,
+      "area_error_pct": 0.0,
+      "mass_error_pct": 0.0,
+      "intensive_inflation": 1.0,
+      "latency_ms": 38.85,
+      "certificate_id": "SPC-048B80359780",
+      "validation_notes": "[A_CRS] Reprojected layers from (EPSG:4326, EPSG:4326) to metric CRS EPSG:5070 (Equal-Area).; [A_MAUP] Blocked illegal aggregation (sum); enforced Tobler Pycnophylactic Mass-Preserving Interpolation for extensive ['population', 'households'] and Area-Weighted Integral Average for intensive ['pop_density', 'median_income', 'pm25', 'ndvi']."
+    },
+    {
+      "task_id": "MAUP-11",
+      "category": "MAUP & Areal Interpolation",
+      "operator": "spatial_join",
+      "mode": "ns_vgp",
+      "scientifically_valid": true,
+      "crs_valid": true,
+      "maup_valid": true,
+      "topo_valid": true,
+      "stat_valid": true,
+      "area_error_pct": 0.0,
+      "mass_error_pct": 0.0,
+      "intensive_inflation": 1.0,
+      "latency_ms": 282.83,
+      "certificate_id": "SPC-5CB7A2781576",
+      "validation_notes": "[A_CRS] Reprojected layers from (EPSG:4326, EPSG:4326) to metric CRS EPSG:5070 (Equal-Area).; [A_MAUP] Blocked illegal aggregation (sum); enforced Tobler Pycnophylactic Mass-Preserving Interpolation for extensive ['population', 'households'] and Area-Weighted Integral Average for intensive ['pop_density', 'median_income', 'pm25', 'ndvi']."
+    },
+    {
+      "task_id": "TOPO-01",
+      "category": "Topological Manifold & Slivers",
+      "operator": "intersection",
+      "mode": "ns_vgp",
+      "scientifically_valid": true,
+      "crs_valid": true,
+      "maup_valid": true,
+      "topo_valid": true,
+      "stat_valid": true,
+      "area_error_pct": 0.0,
+      "mass_error_pct": 0.0,
+      "intensive_inflation": 1.0,
+      "latency_ms": 49.27,
+      "certificate_id": "SPC-8598E46CE735",
+      "validation_notes": "[A_TOPO:PRE] Applied constructive manifold repair (ST_MakeValid) to 1 input geometries.; [A_CRS] Reprojected layers from (EPSG:4326, EPSG:4326) to metric CRS EPSG:32618 (Conformal UTM).; [A_TOPO:POST] Pruned 1 slivers & healed 0 geometries."
+    },
+    {
+      "task_id": "TOPO-06",
+      "category": "Topological Manifold & Slivers",
+      "operator": "intersection",
+      "mode": "ns_vgp",
+      "scientifically_valid": true,
+      "crs_valid": true,
+      "maup_valid": true,
+      "topo_valid": true,
+      "stat_valid": true,
+      "area_error_pct": 0.0,
+      "mass_error_pct": 0.0,
+      "intensive_inflation": 1.0,
+      "latency_ms": 62.937,
+      "certificate_id": "SPC-87CC45C1EB59",
+      "validation_notes": "[A_TOPO:PRE] Applied constructive manifold repair (ST_MakeValid) to 1 input geometries.; [A_CRS] Reprojected layers from (EPSG:4326, EPSG:4326) to metric CRS EPSG:32618 (Conformal UTM).; [A_TOPO:POST] Pruned 1 slivers & healed 0 geometries."
+    },
+    {
+      "task_id": "TOPO-11",
+      "category": "Topological Manifold & Slivers",
+      "operator": "intersection",
+      "mode": "ns_vgp",
+      "scientifically_valid": true,
+      "crs_valid": true,
+      "maup_valid": true,
+      "topo_valid": true,
+      "stat_valid": true,
+      "area_error_pct": 0.0,
+      "mass_error_pct": 0.0,
+      "intensive_inflation": 1.0,
+      "latency_ms": 43.485,
+      "certificate_id": "SPC-BD23FC61D978",
+      "validation_notes": "[A_TOPO:PRE] Applied constructive manifold repair (ST_MakeValid) to 1 input geometries.; [A_CRS] Reprojected layers from (EPSG:4326, EPSG:4326) to metric CRS EPSG:32618 (Conformal UTM).; [A_TOPO:POST] Pruned 1 slivers & healed 0 geometries."
+    },
+    {
+      "task_id": "STAT-01",
+      "category": "Spatial Statistical Pre-Conditions",
+      "operator": "gwr",
+      "mode": "ns_vgp",
+      "scientifically_valid": true,
+      "crs_valid": true,
+      "maup_valid": true,
+      "topo_valid": true,
+      "stat_valid": true,
+      "area_error_pct": 0.0,
+      "mass_error_pct": 0.0,
+      "intensive_inflation": 1.0,
+      "latency_ms": 19.351,
+      "certificate_id": "SPC-104F4F4E330C",
+      "validation_notes": "[A_CRS] Reprojected layers from (EPSG:4326, EPSG:4326) to metric CRS EPSG:32618 (Conformal UTM).; [A_STAT] Imputed 1 missing value(s) in 'disease_rate' with spatial median (52.422). Switched gwr from normal approximation to exact conditional Monte Carlo permutation (999 permutations). Pruned collinear predictor 'x1' (kappa=120146.1) and enabled L2 ridge regularization."
+    },
+    {
+      "task_id": "STAT-06",
+      "category": "Spatial Statistical Pre-Conditions",
+      "operator": "morans_i",
+      "mode": "ns_vgp",
+      "scientifically_valid": true,
+      "crs_valid": true,
+      "maup_valid": true,
+      "topo_valid": true,
+      "stat_valid": true,
+      "area_error_pct": 0.0,
+      "mass_error_pct": 0.0,
+      "intensive_inflation": 1.0,
+      "latency_ms": 18.445,
+      "certificate_id": "SPC-5C352FD41F5A",
+      "validation_notes": "[A_CRS] Reprojected layers from (EPSG:4326, EPSG:4326) to metric CRS EPSG:32618 (Conformal UTM).; [A_STAT] Imputed 1 missing value(s) in 'disease_rate' with spatial median (60.467). Switched morans_i from normal approximation to exact conditional Monte Carlo permutation (999 permutations)."
+    },
+    {
+      "task_id": "STAT-11",
+      "category": "Spatial Statistical Pre-Conditions",
+      "operator": "lisa",
+      "mode": "ns_vgp",
+      "scientifically_valid": true,
+      "crs_valid": true,
+      "maup_valid": true,
+      "topo_valid": true,
+      "stat_valid": true,
+      "area_error_pct": 0.0,
+      "mass_error_pct": 0.0,
+      "intensive_inflation": 1.0,
+      "latency_ms": 18.886,
+      "certificate_id": "SPC-83CE38F6885B",
+      "validation_notes": "[A_CRS] Reprojected layers from (EPSG:4326, EPSG:4326) to metric CRS EPSG:32618 (Conformal UTM).; [A_STAT] Imputed 1 missing value(s) in 'disease_rate' with spatial median (48.652). Switched lisa from normal approximation to exact conditional Monte Carlo permutation (999 permutations)."
+    }
+  ]
 }
