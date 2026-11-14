@@ -1,0 +1,209 @@
+{
+  "protocol_version": "NS-VGP/1.0.0",
+  "total_workflows_evaluated": 60,
+  "overall": {
+    "llm_geo": {
+      "total_tasks": 60,
+      "scientific_validity_pct": 0.0,
+      "crs_valid_pct": 25.0,
+      "maup_valid_pct": 75.0,
+      "topo_valid_pct": 75.0,
+      "stat_valid_pct": 75.0,
+      "mean_latency_ms": 20.65,
+      "std_latency_ms": 25.85
+    },
+    "gas_baseline": {
+      "total_tasks": 60,
+      "scientific_validity_pct": 0.0,
+      "crs_valid_pct": 25.0,
+      "maup_valid_pct": 75.0,
+      "topo_valid_pct": 75.0,
+      "stat_valid_pct": 75.0,
+      "mean_latency_ms": 6.99,
+      "std_latency_ms": 12.53
+    },
+    "ns_vgp": {
+      "total_tasks": 60,
+      "scientific_validity_pct": 100.0,
+      "crs_valid_pct": 100.0,
+      "maup_valid_pct": 100.0,
+      "topo_valid_pct": 100.0,
+      "stat_valid_pct": 100.0,
+      "mean_latency_ms": 106.24,
+      "std_latency_ms": 140.67
+    }
+  },
+  "by_category": {
+    "Metric & Geodesic CRS": {
+      "llm_geo": {
+        "num_tasks": 15,
+        "scientific_validity_pct": 0.0,
+        "crs_valid_pct": 0.0,
+        "maup_valid_pct": 100.0,
+        "topo_valid_pct": 100.0,
+        "stat_valid_pct": 100.0,
+        "mean_area_error_pct": 49.33,
+        "mean_mass_error_pct": 0.0,
+        "mean_intensive_inflation": 1.0,
+        "mean_latency_ms": 0.23,
+        "std_latency_ms": 0.11
+      },
+      "gas_baseline": {
+        "num_tasks": 15,
+        "scientific_validity_pct": 0.0,
+        "crs_valid_pct": 0.0,
+        "maup_valid_pct": 100.0,
+        "topo_valid_pct": 100.0,
+        "stat_valid_pct": 100.0,
+        "mean_area_error_pct": 44.33,
+        "mean_mass_error_pct": 0.0,
+        "mean_intensive_inflation": 1.0,
+        "mean_latency_ms": 0.54,
+        "std_latency_ms": 0.23
+      },
+      "ns_vgp": {
+        "num_tasks": 15,
+        "scientific_validity_pct": 100.0,
+        "crs_valid_pct": 100.0,
+        "maup_valid_pct": 100.0,
+        "topo_valid_pct": 100.0,
+        "stat_valid_pct": 100.0,
+        "mean_area_error_pct": 0.0,
+        "mean_mass_error_pct": 0.0,
+        "mean_intensive_inflation": 1.0,
+        "mean_latency_ms": 40.57,
+        "std_latency_ms": 24.36
+      }
+    },
+    "MAUP & Areal Interpolation": {
+      "llm_geo": {
+        "num_tasks": 15,
+        "scientific_validity_pct": 0.0,
+        "crs_valid_pct": 0.0,
+        "maup_valid_pct": 0.0,
+        "topo_valid_pct": 100.0,
+        "stat_valid_pct": 100.0,
+        "mean_area_error_pct": 0.0,
+        "mean_mass_error_pct": 86.914,
+        "mean_intensive_inflation": 4.0,
+        "mean_latency_ms": 24.96,
+        "std_latency_ms": 14.76
+      },
+      "gas_baseline": {
+        "num_tasks": 15,
+        "scientific_validity_pct": 0.0,
+        "crs_valid_pct": 0.0,
+        "maup_valid_pct": 0.0,
+        "topo_valid_pct": 100.0,
+        "stat_valid_pct": 100.0,
+        "mean_area_error_pct": 0.0,
+        "mean_mass_error_pct": 86.914,
+        "mean_intensive_inflation": 4.0,
+        "mean_latency_ms": 26.93,
+        "std_latency_ms": 9.9
+      },
+      "ns_vgp": {
+        "num_tasks": 15,
+        "scientific_validity_pct": 100.0,
+        "crs_valid_pct": 100.0,
+        "maup_valid_pct": 100.0,
+        "topo_valid_pct": 100.0,
+        "stat_valid_pct": 100.0,
+        "mean_area_error_pct": 0.0,
+        "mean_mass_error_pct": 0.0,
+        "mean_intensive_inflation": 1.0,
+        "mean_latency_ms": 292.02,
+        "std_latency_ms": 175.35
+      }
+    },
+    "Topological Manifold & Slivers": {
+      "llm_geo": {
+        "num_tasks": 15,
+        "scientific_validity_pct": 0.0,
+        "crs_valid_pct": 100.0,
+        "maup_valid_pct": 100.0,
+        "topo_valid_pct": 0.0,
+        "stat_valid_pct": 100.0,
+        "mean_area_error_pct": 0.0,
+        "mean_mass_error_pct": 0.0,
+        "mean_intensive_inflation": 1.0,
+        "mean_latency_ms": 56.88,
+        "std_latency_ms": 17.36
+      },
+      "gas_baseline": {
+        "num_tasks": 15,
+        "scientific_validity_pct": 0.0,
+        "crs_valid_pct": 100.0,
+        "maup_valid_pct": 100.0,
+        "topo_valid_pct": 0.0,
+        "stat_valid_pct": 100.0,
+        "mean_area_error_pct": 0.0,
+        "mean_mass_error_pct": 0.0,
+        "mean_intensive_inflation": 1.0,
+        "mean_latency_ms": 0.33,
+        "std_latency_ms": 0.07
+      },
+      "ns_vgp": {
+        "num_tasks": 15,
+        "scientific_validity_pct": 100.0,
+        "crs_valid_pct": 100.0,
+        "maup_valid_pct": 100.0,
+        "topo_valid_pct": 100.0,
+        "stat_valid_pct": 100.0,
+        "mean_area_error_pct": 0.0,
+        "mean_mass_error_pct": 0.0,
+        "mean_intensive_inflation": 1.0,
+        "mean_latency_ms": 73.0,
+        "std_latency_ms": 17.83
+      }
+    },
+    "Spatial Statistical Pre-Conditions": {
+      "llm_geo": {
+        "num_tasks": 15,
+        "scientific_validity_pct": 0.0,
+        "crs_valid_pct": 0.0,
+        "maup_valid_pct": 100.0,
+        "topo_valid_pct": 100.0,
+        "stat_valid_pct": 0.0,
+        "mean_area_error_pct": 0.0,
+        "mean_mass_error_pct": 0.0,
+        "mean_intensive_inflation": 1.0,
+        "mean_latency_ms": 0.52,
+        "std_latency_ms": 0.29
+      },
+      "gas_baseline": {
+        "num_tasks": 15,
+        "scientific_validity_pct": 0.0,
+        "crs_valid_pct": 0.0,
+        "maup_valid_pct": 100.0,
+        "topo_valid_pct": 100.0,
+        "stat_valid_pct": 0.0,
+        "mean_area_error_pct": 0.0,
+        "mean_mass_error_pct": 0.0,
+        "mean_intensive_inflation": 1.0,
+        "mean_latency_ms": 0.16,
+        "std_latency_ms": 0.03
+      },
+      "ns_vgp": {
+        "num_tasks": 15,
+        "scientific_validity_pct": 100.0,
+        "crs_valid_pct": 100.0,
+        "maup_valid_pct": 100.0,
+        "topo_valid_pct": 100.0,
+        "stat_valid_pct": 100.0,
+        "mean_area_error_pct": 0.0,
+        "mean_mass_error_pct": 0.0,
+        "mean_intensive_inflation": 1.0,
+        "mean_latency_ms": 19.37,
+        "std_latency_ms": 3.42
+      }
+    }
+  },
+  "ablation": {
+    "full_ns_vgp": 100.0,
+    "no_A_CRS": 25.0,
+    "no_A_MAUP": 75.0,
+    "no_A_TOPO": 75.0,
+    "no_A_STAT": 75.0
+  }
+}

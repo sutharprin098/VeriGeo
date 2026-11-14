@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "verigeo"
+version = "1.0.0"
+description = "VeriGeo (NS-VGP 1.0): A Neuro-Symbolic Verifiable GeoAI Protocol for Formally Guaranteed, Mass-Conserving, and Scale-Aware Autonomous GIS"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+  {name = "Prince Suthar"}
+]
+keywords = [
+  "GeoAI",
+  "Autonomous GIS",
+  "Neuro-Symbolic AI",
+  "Geospatial Agentic Services",
+  "GAS",
+  "MAUP",
+  "Pycnophylactic Interpolation",
+  "Spatial Proof Certificate",
+  "GIScience"
+]
+dependencies = [
+  "numpy>=1.24.0",
+  "geopandas>=0.14.0",
+  "shapely>=2.0.0",
+  "pyproj>=3.6.0",
+  "matplotlib>=3.7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=7.4.0",
+]
+
+[project.scripts]
+verigeo = "verigeo.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["verigeo*"]
