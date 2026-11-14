@@ -610,6 +610,7 @@ def fig_case(tasks) -> dict[str, Any]:
     ]):
         tgt["v"] = vals
         tgt.plot(column="v", ax=ax, cmap="YlGnBu", edgecolor="#1e293b", vmin=0, vmax=vmax, legend=True)
+        ax.set_xticks([-77.89, -77.85, -77.81])
         ax.set_title(title, fontsize=10)
     ax = axes[1, 1]
     ax.scatter(truth["pop"], npop, c="#f87171", label="Naive", s=36, ec="k")

@@ -2,7 +2,7 @@
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{amsmath,amssymb,amsfonts}
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{multirow}
@@ -18,7 +18,7 @@
   a4paper,
   left=18mm,
   right=18mm,
-  top=20mm,
+  top=22mm,
   bottom=22mm,
   columnsep=7mm
 }
@@ -36,197 +36,147 @@
   urlcolor=blue!70!black
 }
 
-\newtheorem{definition}{Definition}
-\newtheorem{axiom}{Spatial Axiom}
-\newtheorem{theorem}{Theorem}
-
-\title{\vspace{-8mm}{\footnotesize\texttt{EarthArXiv Preprint $\cdot$ Non-peer-reviewed preprint submitted to EarthArXiv}}\\[4pt]\textbf{VeriGeo: Runtime Verification for Projections, Areal Interpolation, Topology, and Spatial Statistics in Automated GIS}}
-
-\author{
-  \textbf{Prince Suthar}\\
-  AutoGIS Research Lab\\
-  \texttt{https://autogis.princesite.in/} $\cdot$ \texttt{https://github.com/sutharprin098/VeriGeo}
-}
-
-\date{November 2026}
-
 \begin{document}
 
-\maketitle
+\twocolumn[
+\begin{@twocolumnfalse}
+\begin{center}
+  {\footnotesize\texttt{EarthArXiv Preprint $\cdot$ Non-peer-reviewed preprint submitted to EarthArXiv}}\\[8pt]
+  {\LARGE\textbf{VeriGeo: Runtime Verification for Projections, Areal Interpolation, Topology, and Spatial Statistics in Automated GIS}}\\[10pt]
+  {\large\textbf{Prince Suthar}}\\[3pt]
+  {\normalsize AutoGIS Research Lab}\\
+  {\small\texttt{https://autogis.princesite.in/} $\cdot$ \texttt{https://github.com/sutharprin098/VeriGeo}}\\[4pt]
+  {\normalsize November 2026}
+\end{center}
 
-\begin{abstract}
-Automated GIS tools such as LLM-Geo, GIS Copilot, and GeoGPT use large language models to write and run Python scripts for spatial analysis. In these systems, a task counts as successful whenever the script exits with code $0$ and writes an output file. Because libraries like GeoPandas and Shapely allow invalid cartographic and statistical operations without raising exceptions, scripts that run without errors still frequently produce wrong maps and tables. Buffers and areas get calculated directly on unprojected latitude-longitude coordinates ($\text{EPSG}:4326$) or with fixed degree-to-meter constants ($111,320\text{ m/deg}$). Spatial joins and polygon dissolves sum ($\texttt{SUM}$) ratio variables like median income, population density, PM$_{2.5}$, or NDVI while double-counting population totals across overlapping zones. Polygon overlays leave self-intersecting rings and thin boundary slivers in output layers. Spatial statistics such as Moran's $I$, LISA, and GWR run on disconnected contiguity graphs, missing values, small samples ($N < 30$), or collinear predictors.
+\vspace{6pt}
+\noindent\rule{\textwidth}{0.5pt}
+\vspace{2pt}
 
-We built \textbf{VeriGeo (NS-VGP 1.0)}, a Python verification layer that checks and fixes four conditions before and after each spatial operation: metric and equal-area projections ($\mathcal{A}_{\text{CRS}}$), scale typing and mass conservation under the Modifiable Areal Unit Problem ($\mathcal{A}_{\text{MAUP}}$), polygon validity and sliver width ($\mathcal{A}_{\text{Topo}}$), and spatial regression pre-conditions ($\mathcal{A}_{\text{Stat}}$). When a check fails, VeriGeo reprojects layers to local UTM or equal-area coordinates ($\text{EPSG}:5070$, $\text{EPSG}:3035$, or $\text{EPSG}:6933$), replaces naive spatial joins with Tobler's pycnophylactic smoothing for count data and area-weighted averages for ratios, fixes invalid rings, drops slivers narrower than $1.0\text{ m}$ ($2A/P < 1.0\text{ m}$), and replaces disconnected contiguity matrices with row-standardized $k$-nearest neighbor weights. Each run saves a JSON \textbf{Spatial Proof Certificate (SPC)} with a SHA-256 hash of the input and output states.
+\noindent\textbf{Abstract.}
+Automated GIS tools such as LLM-Geo, GIS Copilot, and GeoGPT use large language models to write and run Python scripts for spatial analysis. In practice, these tools treat a task as successful whenever the generated script exits with code $0$ and saves an output file. Because libraries like GeoPandas and Shapely allow invalid cartographic and statistical operations without raising Python errors, scripts that finish cleanly still frequently produce wrong maps and tables. Buffers and areas get calculated directly on unprojected latitude-longitude coordinates ($\text{EPSG}:4326$) or with fixed degree-to-meter constants ($111,320\text{ m/deg}$). Spatial joins and polygon dissolves sum ($\texttt{SUM}$) ratio variables such as median income, population density, PM$_{2.5}$, or NDVI while double-counting population totals across overlapping zones. Polygon overlays leave self-intersecting rings and thin boundary slivers in output layers, and spatial statistics such as Moran's $I$, LISA, and GWR run on disconnected contiguity graphs, missing values, small samples ($N < 30$), or collinear predictors.
 
-We tested VeriGeo against standard GeoPandas baselines (\texttt{naive}, \texttt{naive\_pre}, and area-weighted interpolation \texttt{areaw}) and single-axiom ablations across $70$ tasks ($60$ fault-injected tasks and $10$ clean projected control tasks, $535$ runs in total). An external evaluator scored each output against WGS84 ellipsoidal geodesics (\texttt{pyproj.Geod}), $40,000$ synthetic resident points, and minimum rotated bounding rectangle widths. The \texttt{naive} and \texttt{naive\_pre} scripts passed $0/60$ fault-injected tasks and $10/10$ control tasks ($14.3\%$ overall), with a $35.00\%$ mean ($26.87\%$ median) geodesic area error, a $166.05\%$ population overcount on spatial joins, and a $4.00\times$ inflation of ratio columns. On spatial joins, VeriGeo's pycnophylactic solver cut per-zone population error (NMAE) against the $40,000$-point ground truth to $3.62\%$, compared to $7.92\%$ for standard area-weighted interpolation, while conserving total population to floating-point precision ($1.93 \times 10^{-15}\%$ error). VeriGeo passed all $70/70$ tasks ($100.0\%$, $95\%$ Wilson CI $[94.8\%, 100.0\%]$) with zero false-positive edits on the $10$ control tasks and a mean runtime of $68.16\text{ ms}$.
-\end{abstract}
+We built \textbf{VeriGeo (NS-VGP 1.0)}, a Python verification layer that checks and repairs four practical conditions before and after each spatial operation: (1) projected metric and equal-area coordinate systems, (2) separation of count and ratio variables during spatial joins and dissolves, (3) polygon validity and boundary sliver width, and (4) spatial regression pre-conditions. When a check fails, VeriGeo reprojects layers to local UTM or equal-area coordinates ($\text{EPSG}:5070$, $\text{EPSG}:3035$, or $\text{EPSG}:6933$), replaces naive spatial joins with Tobler's smooth pycnophylactic interpolation for count data and area-weighted averages for ratios, repairs invalid rings, drops slivers narrower than $1.0\text{ m}$, and replaces disconnected contiguity matrices with row-standardized $k$-nearest neighbor weights. Each run saves a JSON \textbf{Spatial Proof Certificate (SPC)} containing a SHA-256 hash of the input and output layers.
 
+We tested VeriGeo against standard GeoPandas baselines (\texttt{naive}, \texttt{naive\_pre}, and area-weighted interpolation \texttt{areaw}) and single-rule ablations across $70$ tasks ($60$ fault-injected tasks and $10$ clean projected control tasks, $535$ runs in total). An independent evaluator scored each output against WGS84 ellipsoidal geodesics (\texttt{pyproj.Geod}), $40,000$ synthetic resident points, and minimum rotated bounding rectangle widths. The \texttt{naive} and \texttt{naive\_pre} scripts passed $0/60$ fault-injected tasks and $10/10$ control tasks ($14.3\%$ overall), with a $35.00\%$ mean ($26.87\%$ median) geodesic area error, a $166.05\%$ population overcount on spatial joins, and a $4.00\times$ inflation of ratio columns. On spatial joins, VeriGeo's pycnophylactic solver reduced per-zone population error (NMAE) against the $40,000$-point ground truth to $3.62\%$, compared to $7.92\%$ for standard area-weighted interpolation, while conserving total population to floating-point precision ($1.93 \times 10^{-15}\%$ error). VeriGeo passed all $70/70$ tasks ($100.0\%$, $95\%$ Wilson CI $[94.8\%, 100.0\%]$) with zero false-positive edits on the $10$ control tasks and a mean runtime of $68.16\text{ ms}$.
+
+\vspace{6pt}
 \noindent\textbf{Keywords:} Autonomous GIS; GeoAI; Modifiable Areal Unit Problem (MAUP); Pycnophylactic Interpolation; Spatial Workflow Verification; Spatial Proof Certificate.
+
+\vspace{6pt}
+\noindent\rule{\textwidth}{0.8pt}
+\vspace{14pt}
+\end{@twocolumnfalse}
+]
 
 \section{Introduction}
 
-Researchers have increasingly connected large language models (LLMs) to spatial libraries to automate GIS workflows \cite{li2023autonomous,janowicz2020geoai,mai2024opportunities}. Tools like LLM-Geo \cite{li2023autonomous}, GeoGPT \cite{zhang2024geogpt}, GIS Copilot \cite{akinboyewa2025giscopilot}, and data retrieval agents \cite{ning2025autonomous} turn plain-text prompts into GeoPandas, Rasterio, PySAL \cite{rey2022pysal}, or PyQGIS scripts.
+Researchers have increasingly connected large language models (LLMs) to spatial libraries to automate GIS workflows \cite{li2023autonomous,janowicz2020geoai,mai2024opportunities}. Systems such as LLM-Geo \cite{li2023autonomous}, GeoGPT \cite{zhang2024geogpt}, GIS Copilot \cite{akinboyewa2025giscopilot}, and autonomous data retrieval agents \cite{ning2025autonomous} translate plain-text instructions into GeoPandas, Rasterio, PySAL \cite{rey2022pysal}, or PyQGIS scripts.
 
-These tools check correctness by watching for Python exceptions. If a script runs to completion and writes a non-empty file, the agent marks the job done. In GIS, however, a script can run cleanly while breaking basic rules of map projections, areal aggregation, polygon topology, or spatial statistics.
+In these tools, correctness is checked by watching for Python runtime exceptions. If a generated script runs to completion and writes a non-empty file, the agent marks the task complete. In GIS, however, a script can run cleanly without raising any exception while breaking basic rules of map projections, polygon aggregation, geometry topology, or spatial statistics.
 
-We reviewed common GeoPandas code patterns generated by LLMs and grouped the recurring silent failures into four categories:
+We reviewed common GeoPandas code patterns generated by LLMs and grouped the recurring silent errors into four practical categories:
 \begin{enumerate}
-  \item \textbf{Unprojected Euclidean Metrics ($\mathcal{A}_{\text{CRS}}$):} When asked to buffer features by $1,000\text{ m}$ or calculate polygon area on geographic coordinates ($\text{EPSG}:4326$), scripts often convert meters to degrees with the equatorial constant $1^\circ \approx 111,320\text{ m}$ (\texttt{gdf.buffer\allowbreak(1000 / 111320.0)}) or multiply square degrees by $111,320^2$. Because longitude degrees narrow toward the poles by $\cos(\phi)$, this degree approximation distorts areas relative to the WGS84 ellipsoid by $6.05\%$ at $\phi = 18.2^\circ\text{N}$, $26.87\%$ at $\phi = 37.8^\circ\text{N}$, and $112.63\%$ at $\phi = 60.2^\circ\text{N}$ \cite{snyder1987map}.
-  \item \textbf{MAUP Aggregation Errors ($\mathcal{A}_{\text{MAUP}}$):} When moving census or environmental columns between mismatched polygon boundaries (such as census tracts to planning zones), standard scripts call \texttt{gpd.sjoin\allowbreak(zones, tracts, predicate="intersects")} followed by \texttt{.groupby(zone\_id).sum()}. That one line causes two separate bugs. Any source tract that crosses a zone boundary gets added into every target zone it touches, inflating count totals (\texttt{population}, \texttt{households}) by $152.95\%\text{--}183.04\%$ across our $10$ spatial join tasks \cite{goodchild1980areal,tobler1979smooth}. At the same time, summing ratio variables (\texttt{median\_income}, \texttt{pop\_density}, \texttt{ndvi}, \texttt{pm25}) during joins or dissolves commits the ecological fallacy \cite{openshaw1984maup,kuhn2012core,scheider2017semantic}, multiplying average income by $3.89\times\text{--}4.32\times$.
-  \item \textbf{Invalid Rings and Overlay Slivers ($\mathcal{A}_{\text{Topo}}$):} Boundary files often contain self-intersecting rings (``bowtie'' polygons). Intersecting two slightly offset boundary layers also creates narrow sliver polygons along shared edges \cite{egenhofer1991pointset,polsby1991third}. Calling \texttt{.make\_valid()} repairs self-intersections, but it leaves boundary slivers in place, which skews feature counts and map legends.
-  \item \textbf{Violated Spatial Statistical Assumptions ($\mathcal{A}_{\text{Stat}}$):} Scripts running Moran's $I$, Local Indicators of Spatial Association (LISA) \cite{anselin1995local}, Getis-Ord $G_i^*$ \cite{getis1992analysis}, or Geographically Weighted Regression (GWR) \cite{brunsdon1996geographically} usually default to Queen contiguity weights (\texttt{weights="queen"}). When the input layer has isolated island polygons (zero touching neighbors), missing values (\texttt{NaN}), small sample sizes ($N < 30$), or collinear predictors (condition number $\kappa(\mathbf{X}) > 30$), naive scripts either propagate \texttt{NaN} outputs, leave zero-weight rows in the contiguity matrix, or invert ill-conditioned design matrices ($\kappa \in [61706, 133728]$).
+  \item \textbf{Unprojected Degree Calculations (CRS):} When asked to buffer features by $1,000\text{ m}$ or compute polygon area on latitude-longitude coordinates ($\text{EPSG}:4326$), scripts often convert meters to degrees using the equatorial constant $1^\circ \approx 111,320\text{ m}$ (\texttt{gdf.buffer\allowbreak(1000 / 111320.0)}) or multiply square degrees by $111,320^2$. Because east-west longitude degrees narrow toward the poles, this degree approximation distorts areas relative to the WGS84 ellipsoid by $6.05\%$ at $18.2^\circ\text{N}$, $26.87\%$ at $37.8^\circ\text{N}$, and $112.63\%$ at $60.2^\circ\text{N}$ \cite{snyder1987map}.
+  \item \textbf{Count Duplication and Ratio Summing in Spatial Joins (MAUP):} When moving census or environmental columns between mismatched polygon boundaries (such as census tracts to planning zones), standard scripts call \texttt{gpd.sjoin\allowbreak(zones, tracts, predicate="intersects")} followed by \texttt{.groupby(zone\_id).sum()}. That one line causes two bugs at once. Any source tract that crosses a zone boundary gets added into every target zone it touches, inflating count totals (\texttt{population}, \texttt{households}) by $152.95\%\text{--}183.04\%$ across our $10$ spatial join tasks \cite{goodchild1980areal,tobler1979smooth}. At the same time, summing ratio variables (\texttt{median\_income}, \texttt{pop\_density}, \texttt{ndvi}, \texttt{pm25}) during joins or dissolves commits the ecological fallacy \cite{openshaw1984maup,kuhn2012core,scheider2017semantic}, multiplying average income by $3.89\times\text{--}4.32\times$.
+  \item \textbf{Invalid Rings and Overlay Slivers (Topology):} Boundary files often contain self-intersecting rings (``bowtie'' polygons). Intersecting two slightly offset boundary layers also leaves narrow sliver polygons along shared edges \cite{egenhofer1991pointset,polsby1991third}. Calling \texttt{.make\_valid()} repairs self-intersections, but it leaves boundary slivers in place, skewing polygon counts and summary tables.
+  \item \textbf{Violated Spatial Statistics Assumptions:} Scripts running Moran's $I$, Local Indicators of Spatial Association (LISA) \cite{anselin1995local}, Getis-Ord $G_i^*$ \cite{getis1992analysis}, or Geographically Weighted Regression (GWR) \cite{brunsdon1996geographically} typically default to Queen contiguity weights (\texttt{weights="queen"}). When the input layer has isolated island polygons (zero touching neighbors), missing values (\texttt{NaN}), small sample sizes ($N < 30$), or redundant collinear predictors, naive scripts either return \texttt{NaN} outputs, leave zero-weight rows in the contiguity matrix, or invert nearly singular design matrices.
 \end{enumerate}
 
 \begin{figure*}[t]
   \centering
   \includegraphics[width=\textwidth]{figures/fig1_protocol_architecture.pdf}
-  \caption{Workflow of VeriGeo (NS-VGP 1.0). Tool calls from an LLM planner or script pass through four symbolic checks ($\mathcal{A}_{\text{CRS}}, \mathcal{A}_{\text{MAUP}}, \mathcal{A}_{\text{Topo}}, \mathcal{A}_{\text{Stat}}$) and repair routines before and after execution, producing a signed Spatial Proof Certificate (SPC).}
+  \caption{Workflow of VeriGeo (NS-VGP 1.0). Tool calls from an LLM planner or script pass through four deterministic verification and repair checks (CRS projection, MAUP scale typing, polygon topology, and spatial statistics pre-conditions) before and after execution, producing a signed Spatial Proof Certificate (SPC).}
   \label{fig:architecture}
 \end{figure*}
 
-Prompt engineering alone does not stop these errors because an LLM cannot see coordinate bounds, polygon overlap graphs, sliver widths, or matrix condition numbers before writing code. To fix this at runtime, we built \textbf{VeriGeo (NS-VGP 1.0)} (Figure~\ref{fig:architecture}), which pairs LLM task planning with deterministic checks in Python \cite{garcez2023neurosymbolic}.
+Prompt engineering alone cannot prevent these errors because an LLM cannot see coordinate bounds, polygon overlap fractions, sliver widths, or matrix condition numbers before writing code. To catch and fix these problems at runtime, we built \textbf{VeriGeo (NS-VGP 1.0)} (Figure~\ref{fig:architecture}), a lightweight Python verification layer that checks inputs and outputs around each spatial operation \cite{garcez2023neurosymbolic}.
 
-The main contributions of this work are:
+The main contributions of this paper are:
 \begin{enumerate}
-  \item We define four machine-checkable spatial axioms ($\mathcal{A}_{\text{CRS}}, \mathcal{A}_{\text{MAUP}}, \mathcal{A}_{\text{Topo}}, \mathcal{A}_{\text{Stat}}$) and paired repair operators ($\mathcal{R}_{\text{CRS}}, \mathcal{R}_{\text{MAUP}}, \mathcal{R}_{\text{Topo}}, \mathcal{R}_{\text{Stat}}$) that enforce projection rules \cite{snyder1987map}, intensive/extensive scale typing \cite{kuhn2012core,scheider2020ontology}, Tobler's pycnophylactic mass conservation \cite{tobler1979smooth}, 9-intersection manifold validity and mean-width sliver pruning \cite{egenhofer1991pointset,polsby1991third}, and spatial econometric pre-conditions \cite{anselin1995local,brunsdon1996geographically}.
-  \item We implement a hybrid areal interpolation solver that classifies table columns into extensive counts, intensive ratios, and nominal identifiers, applying iterative Laplacian pycnophylactic smoothing with exact zone-level mass rescaling to extensive variables and area-weighted averaging to intensive variables. Evaluated against $40,000$-point synthetic ground truth, pycnophylactic smoothing cuts per-zone population NMAE from $7.92\%$ (uniform area-weighted interpolation) to $3.62\%$.
-  \item We introduce the \textbf{Spatial Proof Certificate (SPC)}, a JSON data structure with a SHA-256 digest that records pre-condition checks, repair operations, and post-condition error bounds for standalone scripts, QGIS plugins, and multi-step spatial DAG pipelines.
-  \item We release the open-source \texttt{verigeo} Python package and a 70-task benchmark suite (\texttt{benchmarks/\allowbreak run\_experiments.py}) with an independent ground-truth oracle and 535-row validation log (\texttt{per\_task\_\allowbreak validation\_log.csv}).
+  \item We implement four runtime checks and automatic repair routines covering metric and equal-area projections \cite{snyder1987map}, count versus ratio column typing \cite{kuhn2012core,scheider2020ontology}, Tobler's smooth pycnophylactic interpolation \cite{tobler1979smooth}, polygon validity and sliver removal \cite{egenhofer1991pointset,polsby1991third}, and spatial statistics pre-checks \cite{anselin1995local,brunsdon1996geographically}.
+  \item We build a hybrid areal interpolation routine that separates table columns into counts, ratios, and identifiers, applying smooth pycnophylactic interpolation to count columns and area-weighted averaging to ratio columns. Evaluated against a $40,000$-point synthetic population ground truth, smooth pycnophylactic interpolation cuts per-zone population error (NMAE) from $7.92\%$ (standard area-weighted interpolation) to $3.62\%$.
+  \item We define the \textbf{Spatial Proof Certificate (SPC)}, a JSON audit record with a SHA-256 hash that logs pre-check flags, applied repairs, and post-check measurements for standalone scripts, QGIS plugins, and multi-step pipelines.
+  \item We release the open-source \texttt{verigeo} Python package along with a 70-task benchmark suite (\texttt{benchmarks/\allowbreak run\_experiments.py}) and a 535-row validation log (\texttt{per\_task\_\allowbreak validation\_log.csv}).
 \end{enumerate}
 
 \section{Related Work}
 
 \subsection{Autonomous GIS and Self-Verifying Agents}
-\citet{li2023autonomous} defined five goals for autonomous GIS: self-generating, self-organizing, self-verifying, self-executing, and self-growing. Follow-up systems implemented code generation for spatial analysis \cite{akinboyewa2025giscopilot}, automated data retrieval \cite{ning2025autonomous}, and conversational tool calling \cite{zhang2024geogpt}. Existing autonomous GIS implementations focus on code generation and leave runtime verification to Python exception checks. NS-VGP implements the ``self-verifying'' requirement from \citet{li2023autonomous} as a reusable middleware layer that checks mathematical invariants on input and output layers.
+\citet{li2023autonomous} outlined five goals for autonomous GIS: self-generating, self-organizing, self-verifying, self-executing, and self-growing. Subsequent work focused on LLM code generation for spatial analysis \cite{akinboyewa2025giscopilot}, automated data retrieval \cite{ning2025autonomous}, and conversational tool execution \cite{zhang2024geogpt}. Most existing implementations check only whether the generated Python script throws an exception. VeriGeo implements the ``self-verifying'' requirement from \citet{li2023autonomous} as a reusable Python layer that inspects the data layers before and after each tool call.
 
 \subsection{Semantic Typing in Geoprocessing Workflows}
-\citet{kuhn2012core} proposed core concepts of spatial information to formalize geographic meaning independent of software storage formats. Building on Kuhn's framework, \citet{scheider2017semantic}, \citet{scheider2020ontology}, and \citet{meerlo2021loose} developed Core Concept Data Types (CCD) to prevent invalid tool combinations during automated workflow synthesis. Their ontology distinguishes \emph{extensive} attributes (which accumulate with spatial support area, such as total population) from \emph{intensive} attributes (which are independent of area, such as population density or median income). While prior work used these types in logic-based workflow planners (such as APE), NS-VGP applies intensive and extensive typing at runtime to intercept and repair spatial joins and polygon dissolves.
+\citet{kuhn2012core} introduced core concepts of spatial information to describe geographic meaning independent of file formats. Building on that work, \citet{scheider2017semantic}, \citet{scheider2020ontology}, and \citet{meerlo2021loose} developed Core Concept Data Types (CCD) to prevent invalid tool combinations during workflow planning. Their work distinguishes \emph{extensive} variables (totals that grow with area, such as population count) from \emph{intensive} variables (ratios independent of area, such as population density or median income). Whereas prior work used these rules during compile-time workflow synthesis, VeriGeo applies count and ratio typing at runtime to intercept and fix spatial joins and polygon dissolves.
 
 \subsection{MAUP and Pycnophylactic Areal Interpolation}
-\citet{openshaw1984maup} showed that aggregating point or polygon data into different zonal boundaries alters summary statistics and regression coefficients, a phenomenon known as the Modifiable Areal Unit Problem (MAUP). When transferring data between incongruent polygon sets, \citet{goodchild1980areal} and \citet{goodchild1993basis} formulated area-weighted areal interpolation, which assumes uniform density within each source polygon. Earlier, \citet{tobler1979smooth} introduced smooth pycnophylactic interpolation, which computes a smooth density surface $\rho(x,y)$ over a grid while preserving the exact initial count within each source polygon ($\iint_{A_s} \rho(x,y)\,dx\,dy = C_s$, $\rho(x,y) \ge 0$). NS-VGP combines Tobler's iterative Laplacian surface with polygon intersection weights so that extensive counts are conserved to floating-point precision while capturing smooth cross-boundary density gradients.
+\citet{openshaw1984maup} showed that aggregating point or polygon data into different zonal boundaries changes summary statistics and regression results, known as the Modifiable Areal Unit Problem (MAUP). To transfer counts between mismatched polygon layers, \citet{goodchild1980areal} and \citet{goodchild1993basis} formalized area-weighted interpolation, which splits each source polygon's count in proportion to overlap area under the assumption that population is spread evenly inside each tract. Earlier, \citet{tobler1979smooth} introduced smooth pycnophylactic interpolation, which estimates a smooth density surface over a grid while keeping the exact original total inside every source polygon. VeriGeo combines Tobler's smooth density grid with polygon intersection pieces so that total population is conserved while capturing smooth density transitions across tract borders.
 
-\section{Formal Specification of the Four Spatial Axioms}
+\section{How VeriGeo Works: The Four Verification Rules}
 
-We represent a single geoprocessing step as $W = (\text{op}, \mathcal{L}_1, \mathcal{L}_2, \Theta)$, where $\text{op}$ is the operator name, $\mathcal{L}_1 = (\mathcal{G}_1, \mathcal{X}_1, \text{CRS}_1)$ is the primary vector layer with geometries $\mathcal{G}_1 = \{g_1, \dots, g_M\}$, attribute table $\mathcal{X}_1$, and coordinate reference system $\text{CRS}_1$, $\mathcal{L}_2$ is an optional secondary layer, and $\Theta$ is the dictionary of operator parameters.
+Every operation passed to VeriGeo consists of an operator name (such as \texttt{buffer}, \texttt{area}, \texttt{spatial\_join}, \texttt{dissolve}, \texttt{intersection}, \texttt{morans\_i}, or \texttt{gwr}), a primary \texttt{GeoDataFrame}, an optional secondary \texttt{GeoDataFrame}, and a dictionary of parameters. Before and after running the operation, \texttt{verigeo/protocol.py} checks four rules.
 
-\subsection{Axiom 1: Metric and Geodesic CRS Invariant (\texorpdfstring{$\mathcal{A}_{\text{CRS}}$}{A\_CRS})}
+\subsection{Rule 1: Map Projections and Equal-Area Coordinates}
+\textbf{What goes wrong:} Operations that measure distance, area, polygon overlays, or spatial neighbor weights require projected metric coordinates (meters or feet). When a script runs these operations on unprojected latitude-longitude degrees ($\text{EPSG}:4326$), east-west distances are stretched relative to north-south distances because longitude lines converge toward the poles. Furthermore, when a script clips or joins two layers stored in different projections (for example, $\text{EPSG}:4326$ and Web Mercator $\text{EPSG}:3857$), coordinates fail to line up altogether.
 
-\begin{axiom}[$\mathcal{A}_{\text{CRS}}$]
-\label{ax:crs}
-Let $\mathcal{O}_{\text{metric}}$ be the set of operators that compute Euclidean distances, areas, spatial weights, or polygon overlays (\texttt{buffer}, \texttt{area}, \texttt{length}, \texttt{distance}, \texttt{nearest}, \texttt{areal\_\allowbreak interpolation}, \texttt{spatial\_join}, \texttt{dissolve}, \texttt{intersection}, \texttt{clip\_and\_area}, \texttt{morans\_i}, \texttt{lisa}, \texttt{gwr}), and let $\mathcal{O}_{\text{area}} \subset \mathcal{O}_{\text{metric}}$ be the subset requiring equal-area preservation (\texttt{area}, \texttt{areal\_\allowbreak interpolation}, \texttt{spatial\_join}, \texttt{dissolve}). A workflow step $W$ satisfies $\mathcal{A}_{\text{CRS}}$ if and only if:
-\begin{align}
-  \text{op} \in \mathcal{O}_{\text{metric}} &\implies \text{unit}(\text{CRS}_1) \in \{\text{m}, \text{ft}\} \nonumber\\
-  &\qquad \land \neg \text{is\_geog}(\text{CRS}_1), \\
-  \mathcal{L}_2 \neq \varnothing &\implies \text{CRS}_1 = \text{CRS}_2.
-\end{align}
-\end{axiom}
-
-\noindent\textbf{Distortion Calculation and Repair ($\mathcal{R}_{\text{CRS}}$):} When $\mathcal{L}_1$ is stored in $\text{EPSG}:4326$ with bounding-box center $(\lambda_c, \phi_c)$ and spans $(\Delta\lambda, \Delta\phi)$, a degree of longitude has arc length $\cos(\phi_c)$ relative to a degree of latitude on the sphere. Planar calculations in degree coordinates stretch East-West distances by the secant factor $\sec(\phi_c) = 1/\cos(\phi_c)$. Let $E_{\text{area}}$ hold whenever $\text{op} \in \mathcal{O}_{\text{area}}$ or $\Delta\lambda > 6.5^\circ$. If $\mathcal{A}_{\text{CRS}}$ fails, $\mathcal{R}_{\text{CRS}}$ reprojects both $\mathcal{L}_1$ and $\mathcal{L}_2$ to $\text{CRS}^*$:
-\begin{equation}
-  \text{CRS}^* = \begin{cases}
-    \text{EPSG}:5070 & \text{if } E_{\text{area}} \land \text{in\_CONUS}, \\
-    \text{EPSG}:3035 & \text{if } E_{\text{area}} \land \text{in\_Europe}, \\
-    \text{EPSG}:6933 & \text{if } E_{\text{area}} \text{ elsewhere}, \\
-    \text{EPSG}:(32600 + Z) & \text{if } \neg E_{\text{area}} \land \phi_c \ge 0, \\
-    \text{EPSG}:(32700 + Z) & \text{if } \neg E_{\text{area}} \land \phi_c < 0,
-  \end{cases}
-\end{equation}
-where $Z = \lfloor (\lambda_c + 180)/6 \rfloor + 1$ ($Z \in \{1,\dots,60\}$) is the local UTM zone.
-
-\subsection{Axiom 2: Semantic Scale Type and MAUP Mass Conservation (\texorpdfstring{$\mathcal{A}_{\text{MAUP}}$}{A\_MAUP})}
-
-The classifier $\tau(X_k) \in \{\tau_{\text{ext}}, \tau_{\text{int}}, \tau_{\text{nom}}\}$ assigns each column in $\mathcal{X}_1$ to one of three types using lexical pattern matching followed by value-range inspection (\texttt{verigeo/\allowbreak protocol.py}, lines 115--242):
+\textbf{How VeriGeo fixes it:} Before running any metric operation, VeriGeo inspects the coordinate reference system (CRS) of both layers. If either layer uses geographic degrees ($\text{EPSG}:4326$) or if the two layers have mismatched projections, VeriGeo automatically reprojects them to a shared metric CRS based on the operation type and the dataset's bounding box:
 \begin{itemize}
-  \item \textbf{Nominal ($\tau_{\text{nom}}$):} Identifiers and codes matching \texttt{id}, \texttt{fid}, \texttt{geoid}, \texttt{fips}, \texttt{code}, \texttt{name}, \texttt{type}, \texttt{zone}, or string/object data types.
-  \item \textbf{Intensive ($\tau_{\text{int}}$):} Scale-invariant ratios, densities, rates, temperatures, and spectral indices matching \texttt{rate}, \texttt{density}, \texttt{pct}, \texttt{ratio}, \texttt{index}, \texttt{mean}, \texttt{median}, \texttt{per\_capita}, \texttt{ndvi}, \texttt{evi}, \texttt{lst}, \texttt{temp}, \texttt{aqi}, \texttt{pm25}, \texttt{income}, \texttt{poverty}, or fractional values bounded in $[-1, 1]$ or $[0, 100]$. Intensive patterns are checked before extensive patterns so compound names like \texttt{pop\_density} or \texttt{crime\_rate} are typed as $\tau_{\text{int}}$.
-  \item \textbf{Extensive ($\tau_{\text{ext}}$):} Additive physical or demographic totals matching \texttt{pop}, \texttt{population}, \texttt{total}, \texttt{count}, \texttt{households}, \texttt{cases}, \texttt{emissions}, \texttt{tons}, \texttt{crimes}, \texttt{jobs}, or non-negative integer counts.
+  \item \textbf{Equal-area operations (\texttt{area}, \texttt{spatial\_join}, \texttt{areal\_interpolation}, \texttt{dissolve}), or datasets wider than $6.5^\circ$ of longitude:} VeriGeo reprojects to $\text{EPSG}:5070$ (NAD83 Conus Albers) for North America, $\text{EPSG}:3035$ (ETRS89 LAEA) for Europe, or $\text{EPSG}:6933$ (WGS84 global cylindrical equal-area) elsewhere.
+  \item \textbf{Distance and buffer operations (\texttt{buffer}, \texttt{length}, \texttt{distance}, \texttt{nearest}, \texttt{intersection}):} VeriGeo computes the center longitude and latitude of the layer and reprojects to the matching local UTM zone ($\text{EPSG}:32601\text{--}32660$ in the northern hemisphere or $\text{EPSG}:32701\text{--}32760$ in the southern hemisphere).
 \end{itemize}
 
-\begin{axiom}[$\mathcal{A}_{\text{MAUP}}$]
-\label{ax:maup}
-For any zonal aggregation or polygon-to-polygon transfer from source polygons $\{A_s\}_{s=1}^M$ to target polygons $\{B_t\}_{t=1}^K$ with aggregation function $\bigoplus_k$:
-\begin{align}
-  \forall X_k \in \tau_{\text{int}} &: \quad \bigoplus_k \neq \texttt{SUM}, \\
-  \forall C_k \in \tau_{\text{ext}} &: \quad \left| \sum_{s \in \mathcal{S}_{\text{cov}}} C_{s,k} - \sum_{t=1}^{K} \hat{C}_{t,k} \right| \le \varepsilon_{\text{mass}},
-\end{align}
-where $\mathcal{S}_{\text{cov}} = \{s : |A_s \cap \bigcup_{t=1}^K B_t| > 0\}$ is the set of source polygons covered by the target layer and $\varepsilon_{\text{mass}} = 10^{-5} \sum_{s \in \mathcal{S}_{\text{cov}}} |C_{s,k}|$.
-\end{axiom}
+\subsection{Rule 2: Separating Counts from Ratios in Spatial Joins and Dissolves}
+\textbf{What goes wrong:} When transferring attributes from source polygons (such as census tracts) to target polygons (such as school districts or flood zones), calling \texttt{sjoin} followed by \texttt{sum()} adds every intersecting tract's full population into every target zone it touches, while also adding up ratio columns like median income or air quality index.
 
-\begin{theorem}[Exact Mass Conservation and Intensive Bounds under $\mathcal{R}_{\text{MAUP}}$]
-\label{thm:pycno}
-Suppose source zones $\{A_s\}_{s=1}^M$ and target zones $\{B_t\}_{t=1}^K$ are projected into an equal-area CRS ($\delta_A = 0$). For each extensive column $C_k$, let $\rho_k^{(r)}(x,y) \ge 0$ be computed on a $G \times G$ lattice ($G=40$) by iterating $R=35$ steps of discrete 4-neighbor Laplacian smoothing with relaxation $\omega = 0.8$:
-\begin{equation}
-\begin{aligned}
-  \bar{\rho}_{i,j}^{(r-1)} &= \tfrac{1}{4}\!\left(\rho_{i+1,j}^{(r-1)} + \rho_{i-1,j}^{(r-1)}\right) \\
-  &\quad + \tfrac{1}{4}\!\left(\rho_{i,j+1}^{(r-1)} + \rho_{i,j-1}^{(r-1)}\right), \\
-  \tilde{\rho}_{i,j}^{(r)} &= \max\!\left(0,\, (1-\omega)\rho_{i,j}^{(r-1)} + \omega \bar{\rho}_{i,j}^{(r-1)}\right),
-\end{aligned}
-\end{equation}
-followed at each step by zone-wise mass rescaling:
-\[
-  \rho_{i,j}^{(r)} = \tilde{\rho}_{i,j}^{(r)} \cdot \frac{C_{s,k}}{\sum_{(u,v) \in A_s} \tilde{\rho}_{u,v}^{(r)}}.
-\]
-Let $c_{s,t}$ be the centroid of intersection piece $A_s \cap B_t$ with area $a_{s,t} = |A_s \cap B_t|$ and sampled density weight $w_{s,t} = \allowbreak a_{s,t} \cdot \max(\rho_k^{(R)}(c_{s,t}), 10^{-6})$. Then the estimator:
-\begin{align}
-  \hat{C}_{t,k} &= \sum_{s=1}^{M} C_{s,k} \frac{w_{s,t}}{\sum_{t'=1}^{K} w_{s,t'}}, \quad \tau(C_k) = \tau_{\text{ext}}, \\
-  \hat{Z}_{t,k} &= \frac{\sum_{s=1}^{M} a_{s,t} Z_{s,k}}{\sum_{s=1}^{M} a_{s,t}}, \quad \tau(Z_k) = \tau_{\text{int}},
-\end{align}
-conserves total covered mass ($\sum_{t=1}^K \hat{C}_{t,k} = \allowbreak \sum_{s \in \mathcal{S}_{\text{cov}}} C_{s,k}$) and keeps every intensive estimate inside the source range ($\min_s Z_{s,k} \le \allowbreak \hat{Z}_{t,k} \le \allowbreak \max_s Z_{s,k}$).
-\end{theorem}
-\begin{proof}
-For every $s \in \mathcal{S}_{\text{cov}}$, $\sum_{t=1}^K w_{s,t} > 0$. Summing $\hat{C}_{t,k}$ over $t = 1,\dots,K$ gives:
-\[
-  \sum_{t=1}^{K} \hat{C}_{t,k} = \sum_{s \in \mathcal{S}_{\text{cov}}} C_{s,k} \frac{\sum_{t=1}^{K} w_{s,t}}{\sum_{t'=1}^{K} w_{s,t'}} = \sum_{s \in \mathcal{S}_{\text{cov}}} C_{s,k}.
-\]
-For any intensive variable $Z_k$, the weights $\alpha_{s,t} = a_{s,t} / \sum_{s'=1}^M a_{s',t}$ satisfy $\alpha_{s,t} \ge 0$ and $\sum_{s=1}^M \alpha_{s,t} = 1$, so $\hat{Z}_{t,k} = \sum_{s=1}^M \alpha_{s,t} Z_{s,k} \in [\min_s Z_{s,k}, \max_s Z_{s,k}]$.
-\end{proof}
-
-\subsection{Axiom 3: Topological 9-Intersection and Mean-Width Sliver Invariant (\texorpdfstring{$\mathcal{A}_{\text{Topo}}$}{A\_Topo})}
-
-\begin{axiom}[$\mathcal{A}_{\text{Topo}}$]
-\label{ax:topo}
-Every geometry $g \in \mathcal{G}$ must be non-empty and valid under the OGC Simple Features / Egenhofer 9-intersection rules \cite{egenhofer1991pointset} ($\texttt{g.is\_valid} = \text{True}$). Let $A(g)$ and $P(g)$ denote polygon area and perimeter in projected meters. For polygon overlay outputs (\texttt{intersection}, \texttt{difference}, \texttt{sym\_\allowbreak difference}), every polygon must satisfy the mean-width threshold:
-\begin{equation}
-  W_{\text{mean}}(g) = \frac{2 A(g)}{P(g)} \ge w_{\min} \quad (w_{\min} = 1.0\text{ m}),
-\end{equation}
-and satisfy either the Polsby-Popper compactness threshold $\text{PP}(g) = 4\pi A(g)/P(g)^2 \ge 0.005$ or the relative area threshold $A(g)/\overline{A}(\mathcal{G}) \ge 10^{-4}$ \cite{polsby1991third}.
-\end{axiom}
-
-When $\mathcal{A}_{\text{Topo}}$ fails on input layers, $\mathcal{R}_{\text{Topo}}$ drops empty geometries and calls \texttt{shapely.\allowbreak validation.\allowbreak make\_valid(g)} to split self-intersecting bowtie rings into valid multi-polygons. After an overlay operation, we compare two sliver-pruning rules in projected meters: our v1 rule (\texttt{ns\_vgp\_v1}, \texttt{sliver\_rule=\allowbreak "pp\_relative"}), which prunes polygons only when both $\text{PP}(g) < 0.005$ and $A(g) < 10^{-4}\overline{A}(\mathcal{G})$, and our default v2 rule (\texttt{ns\_vgp}, \texttt{sliver\_rule=\allowbreak "mean\_width"}), which prunes any strip with $W_{\text{mean}}(g) = 2A(g)/P(g) < 1.0\text{ m}$. For a narrow boundary sliver of length $L$ and width $w \ll L$, $2A/P \approx 2(Lw)/(2L) = w$, providing a scale-invariant estimate of physical strip width.
-
-\subsection{Axiom 4: Spatial Statistical Pre-Conditions (\texorpdfstring{$\mathcal{A}_{\text{Stat}}$}{A\_Stat})}
-
-\begin{axiom}[$\mathcal{A}_{\text{Stat}}$]
-\label{ax:stat}
-For spatial statistical operators $\text{op} \in \{\texttt{morans\_i},\allowbreak \texttt{lisa},\allowbreak \texttt{getis\_ord},\allowbreak \texttt{gwr}\}$ on target vector $\mathbf{y} \in \mathbb{R}^N$, spatial weights matrix $\mathbf{W} \in \mathbb{R}^{N \times N}$, and predictor matrix $\mathbf{X} \in \mathbb{R}^{N \times p}$:
-\begin{enumerate}
-  \item $\mathbf{y}$ contains no $\texttt{NaN}$ or $\pm\infty$ entries and $\text{Var}(\mathbf{y}) > 10^{-12}$;
-  \item No observation is a disconnected island in $\mathbf{W}$: $\forall i \in \{1,\dots,N\},\, \sum_{j=1}^N w_{ij} > 0$;
-  \item Sample size satisfies $N \ge 30$ for normal $z$-score inference, or conditional permutation ($P \ge 999$) is used when $10 \le N < 30$;
-  \item For multivariate regression ($\texttt{gwr}$), the standardized design matrix $\tilde{\mathbf{X}}$ has condition number $\kappa(\tilde{\mathbf{X}}) = \allowbreak \sigma_{\max}(\tilde{\mathbf{X}}) / \sigma_{\min}(\tilde{\mathbf{X}}) < 30$.
-\end{enumerate}
-\end{axiom}
-
-When $\mathcal{A}_{\text{Stat}}$ fails, $\mathcal{R}_{\text{Stat}}$ replaces missing entries in $\mathbf{y}$ with the spatial median, checks whether any polygon has zero touching neighbors under Queen/Rook contiguity, and if islands exist, builds a row-standardized metric $k$-nearest neighbor matrix ($k = \max(3, \min(6, N-1))$, $w_{ij} = 1/k$ for $j \in \mathcal{N}_k(i)$) using projected centroids. If $N < 30$, inference mode is set to $999$ conditional permutations. If $\kappa(\tilde{\mathbf{X}}) > 30$, $\mathcal{R}_{\text{Stat}}$ computes the pairwise correlation matrix $|\mathbf{R}|$, removes the predictor with the largest off-diagonal correlation, and sets ridge parameter $\lambda = 10^{-2}$.
-
-\section{Experimental Methodology and Independent Ground-Truth Oracle}
-
-\subsection{Test Environment and Baseline Implementations}
-All experiments were executed locally on Windows (Python $3.11.9$, GeoPandas $1.1.4$, Shapely $2.2.0$, NumPy $1.26.4$, Pandas $2.2.2$, and Pytest $9.1.1$) with fixed random seed \texttt{np.random.\allowbreak default\_rng(42)}. The complete benchmark script is located in \texttt{benchmarks/\allowbreak run\_experiments.py}, and the 535-row task-by-task output table is saved in \texttt{benchmarks/\allowbreak per\_task\_\allowbreak validation\_log.csv}.
-
-To ensure full reproducibility without requiring commercial LLM API keys, all baselines in \texttt{benchmarks/\allowbreak run\_experiments.py} are deterministic GeoPandas implementations of standard geoprocessing patterns:
+\textbf{How VeriGeo fixes it:} First, VeriGeo classifies each numeric or text column in the attribute table into one of three categories using column-name keywords and value ranges (\texttt{verigeo/\allowbreak protocol.py}, lines 115--242):
 \begin{itemize}
-  \item \textbf{\texttt{naive} (Unprojected GeoPandas Baseline):} Runs the operator directly on the input \texttt{GeoDataFrame} using $1^\circ = 111,320\text{ m}$ for degree-based buffers and areas, \texttt{gpd.sjoin(..., predicate=\allowbreak "intersects").\allowbreak groupby("zone\_id").sum()} for spatial joins, \texttt{dissolve(by=..., aggfunc="sum")} for dissolves, and Queen contiguity weights without \texttt{NaN} imputation or collinearity pruning.
-  \item \textbf{\texttt{naive\_pre} (Pre-Processed GeoPandas Baseline):} Repairs invalid input geometries via \texttt{.make\_valid()}, aligns secondary layer CRS to the primary layer (\texttt{secondary\_gdf.\allowbreak to\_crs(primary\_gdf.crs)}), and drops \texttt{NaN} rows before running statistical operators, but does not perform equal-area/UTM reprojection, semantic scale typing, sliver pruning, or weight-island healing.
-  \item \textbf{\texttt{areaw} (Standard Area-Weighted Interpolation):} Projects source and target polygons to $\text{EPSG}:5070$ and interpolates extensive counts by overlap fraction $a_{s,t}/|A_s|$ and intensive variables by area-weighted averaging $a_{s,t}/\sum_{s'} a_{s',t}$, without pycnophylactic smoothing.
-  \item \textbf{\texttt{ns\_vgp\_v1} and \texttt{ns\_vgp} (Ours):} Runs \texttt{NeuroSymbolic\allowbreak GeoVerifier(auto\_heal=True)} with \texttt{sliver\_rule=\allowbreak "pp\_relative"} (\texttt{ns\_vgp\_v1}) and \texttt{sliver\_rule=\allowbreak "mean\_width"} (\texttt{ns\_vgp}). Single-axiom ablations pass \texttt{disabled\_axioms=\{...\}} to \texttt{NeuroSymbolic\allowbreak GeoVerifier} so that disabling an axiom genuinely skips that axiom's verification and repair logic during execution.
+  \item \textbf{Identifiers (Nominal):} Columns matching \texttt{id}, \texttt{fid}, \texttt{geoid}, \texttt{fips}, \texttt{code}, \texttt{name}, \texttt{type}, \texttt{zone}, or string data types.
+  \item \textbf{Ratios and Rates (Intensive):} Scale-independent variables matching \texttt{rate}, \texttt{density}, \texttt{pct}, \texttt{ratio}, \texttt{index}, \texttt{mean}, \texttt{median}, \texttt{per\_capita}, \texttt{ndvi}, \texttt{evi}, \texttt{lst}, \texttt{temp}, \texttt{aqi}, \texttt{pm25}, \texttt{income}, \texttt{poverty}, or fractional values bounded in $[-1, 1]$ or $[0, 100]$. Ratio keywords are checked first so compound names like \texttt{pop\_density} or \texttt{crime\_rate} are never mistaken for counts.
+  \item \textbf{Counts and Totals (Extensive):} Additive totals matching \texttt{pop}, \texttt{population}, \texttt{total}, \texttt{count}, \texttt{households}, \texttt{cases}, \texttt{emissions}, \texttt{tons}, \texttt{crimes}, \texttt{jobs}, or non-negative integer counts.
+\end{itemize}
+
+Once the columns are typed, VeriGeo blocks \texttt{SUM} on all ratio columns and transfers attributes in an equal-area projection as follows:
+\begin{enumerate}
+  \item \textbf{Area-weighted average for ratios:} Each target zone receives the area-weighted average of the overlapping source polygons. Because the overlap weights add up to $1$, estimated ratios always stay within the minimum and maximum values of the source data.
+  \item \textbf{Smooth pycnophylactic interpolation for counts:} Instead of assuming population is spread flat across each tract, VeriGeo lays a $40 \times 40$ grid over the study area. It initializes each grid cell with its source tract's average density and runs $35$ smoothing passes. In each pass, every cell is updated to a blend of $20\%$ its current value and $80\%$ the average of its four neighboring cells, any negative values are clipped to zero, and all cells inside each source tract are rescaled so their sum equals the tract's exact original count. VeriGeo then splits each source tract's count across the intersecting target zones in proportion to the smoothed grid density inside each intersection piece. Because the shares leaving each covered tract add up to $100\%$, total population is conserved to floating-point precision.
+\end{enumerate}
+
+\subsection{Rule 3: Fixing Invalid Rings and Removing Boundary Slivers}
+\textbf{What goes wrong:} Real-world polygon files often contain self-intersecting rings (``bowtie'' geometries) that cause overlay operations to fail or return wrong areas. Even when input polygons are valid, intersecting two boundary layers that were digitized at slightly different scales produces dozens of long, paper-thin sliver polygons along shared borders.
+
+\textbf{How VeriGeo fixes it:} Before running any operation, VeriGeo removes empty geometries and calls \texttt{shapely.\allowbreak validation.\allowbreak make\_valid()} on any polygon where \texttt{is\_valid} is \texttt{False}, splitting self-intersecting rings into clean multi-polygons. After a polygon overlay (\texttt{intersection}, \texttt{difference}, or \texttt{sym\_\allowbreak difference}), VeriGeo inspects every output polygon in projected meters and calculates its mean strip width:
+\begin{equation}
+  \text{Mean Width} = \frac{2 \times \text{Area}}{\text{Perimeter}}.
+\end{equation}
+For a narrow strip of length $L$ and width $w$ (where $w \ll L$), area is $L \times w$ and perimeter is approximately $2L$, so $(2 \times \text{Area}) / \text{Perimeter} \approx w$. By default (\texttt{sliver\_rule=\allowbreak "mean\_width"}), VeriGeo drops any overlay fragment whose mean width is less than $1.0\text{ m}$. We also test an alternative compactness rule (\texttt{ns\_vgp\_v1}, \texttt{sliver\_rule=\allowbreak "pp\_relative"}) that drops polygons only when both their Polsby-Popper score ($4\pi \times \text{Area} / \text{Perimeter}^2$) is below $0.005$ and their area is less than $0.01\%$ of the layer's mean polygon area.
+
+\subsection{Rule 4: Pre-Checks for Spatial Statistics}
+\textbf{What goes wrong:} Spatial autocorrelation and regression routines (\texttt{morans\_i}, \texttt{lisa}, \texttt{getis\_ord}, and \texttt{gwr}) fail silently when given missing values, isolated islands in a contiguity graph, small sample sizes, or redundant predictor columns.
+
+\textbf{How VeriGeo fixes it:} Before executing a spatial statistical model, VeriGeo verifies and repairs four conditions:
+\begin{enumerate}
+  \item \textbf{Missing values and constant columns:} Any \texttt{NaN} or infinite values in the target column are filled using the median of the valid observations, and VeriGeo checks that the variance of the target column is greater than $10^{-12}$.
+  \item \textbf{Disconnected island polygons:} VeriGeo checks whether any polygon has zero touching neighbors under Queen or Rook contiguity. If even one isolated island is found, VeriGeo replaces the contiguity graph with a row-standardized $k$-nearest neighbor weight matrix ($k$ chosen between $3$ and $6$ based on sample size) computed from projected centroid distances, guaranteeing that every row of the weight matrix sums to $1$.
+  \item \textbf{Small sample sizes:} Standard normal $z$-score p-values are unreliable when sample size $N < 30$. Whenever $10 \le N < 30$, VeriGeo automatically switches the inference setting to $999$ conditional random permutations.
+  \item \textbf{Collinear predictors in GWR:} For multivariate regression, VeriGeo standardizes the predictor columns and computes the matrix condition number $\kappa$. If $\kappa > 30$, VeriGeo checks the pairwise correlation table, drops the redundant column with the highest correlation, and applies a small ridge regularization penalty ($0.01$).
+\end{enumerate}
+
+\section{Experimental Setup and Independent Ground-Truth Evaluator}
+
+\subsection{Test Environment and Baselines}
+All experiments were run locally on Windows (Python $3.11.9$, GeoPandas $1.1.4$, Shapely $2.2.0$, NumPy $1.26.4$, Pandas $2.2.2$, and Pytest $9.1.1$) using a fixed random seed (\texttt{np.random.\allowbreak default\_rng(42)}). The full benchmark script is provided in \texttt{benchmarks/\allowbreak run\_experiments.py}, and every single run is logged in \texttt{benchmarks/\allowbreak per\_task\_\allowbreak validation\_log.csv} ($535$ rows in total).
+
+To make the benchmark 100\% reproducible without paid LLM API keys, all baselines in \texttt{benchmarks/\allowbreak run\_experiments.py} are deterministic GeoPandas implementations of standard script patterns:
+\begin{itemize}
+  \item \textbf{\texttt{naive} (Standard Unverified GeoPandas):} Runs the operation directly on the input \texttt{GeoDataFrame} using $1^\circ = 111,320\text{ m}$ for degree-based buffers and areas, \texttt{gpd.sjoin(..., predicate=\allowbreak "intersects").\allowbreak groupby("zone\_id").sum()} for spatial joins, \texttt{dissolve(by=..., aggfunc="sum")} for dissolves, and Queen contiguity weights without \texttt{NaN} filling or collinearity checks.
+  \item \textbf{\texttt{naive\_pre} (GeoPandas with Basic Pre-Processing):} Repairs invalid input geometries via \texttt{.make\_valid()}, matches the secondary layer's CRS to the primary layer (\texttt{secondary\_gdf.\allowbreak to\_crs(primary\_gdf.crs)}), and drops \texttt{NaN} rows before running statistics, but does not reproject degree layers to equal-area/UTM, separate counts from ratios, prune overlay slivers, or replace island contiguity weights.
+  \item \textbf{\texttt{areaw} (Standard Area-Weighted Interpolation):} Projects both polygon layers to $\text{EPSG}:5070$ and splits count columns by overlap area fraction while averaging ratio columns by overlap area, without pycnophylactic smoothing.
+  \item \textbf{\texttt{ns\_vgp\_v1} and \texttt{ns\_vgp} (VeriGeo):} Runs \texttt{NeuroSymbolic\allowbreak GeoVerifier(auto\_heal=True)} with the compactness sliver rule (\texttt{ns\_vgp\_v1}) and our default mean-width sliver rule (\texttt{ns\_vgp}). Single-rule ablations pass \texttt{disabled\_axioms=\{...\}} to turn off one rule at a time during execution.
 \end{itemize}
 
 \begin{figure*}[t]
   \centering
   \includegraphics[width=\textwidth]{figures/fig2_benchmark_comparison.pdf}
-  \caption{Empirical benchmark results across $70$ tasks ($60$ adversarial tasks in 4 categories + $10$ clean control tasks) scored by the independent ground-truth evaluator: (a) Verified pass rate with $95\%$ Wilson score confidence intervals; (b) CRS geodesic relative area error ($\%$) on a log scale; (c) MAUP per-zone population NMAE ($\%$) against $40,000$-point synthetic ground truth; (d) Remaining boundary slivers per task.}
+  \caption{Benchmark results across $70$ tasks ($60$ fault-injected tasks across 4 categories + $10$ clean control tasks) scored by the independent ground-truth evaluator: (a) Percentage of tasks passing the independent check in each category with $95\%$ Wilson confidence intervals; (b) Measured error ($\%$, log scale) comparing unverified GeoPandas (\texttt{naive}) against VeriGeo (\texttt{ns\_vgp}) on median CRS area error, mean MAUP total population error, and mean MAUP income error.}
   \label{fig:benchmark}
 \end{figure*}
 
@@ -276,84 +226,84 @@ To ensure full reproducibility without requiring commercial LLM API keys, all ba
 }
 \end{table*}
 
-\subsection{Construction of the 70 Tasks and Independent Ground Truth}
-Pass/fail outcomes are determined by an external evaluator in \texttt{benchmarks/\allowbreak run\_experiments.py} rather than NS-VGP's internal certificate flag:
+\subsection{How the 70 Tasks and Independent Ground Truth Were Built}
+Pass/fail scores are decided by an external evaluator in \texttt{benchmarks/\allowbreak run\_experiments.py} rather than by VeriGeo's own certificate flag:
 \begin{enumerate}
-  \item \textbf{Tasks \texttt{CRS-01} to \texttt{CRS-15} (WGS84 Ellipsoidal Geodesic Truth):} Each task builds a $3 \times 3$ grid of polygons ($0.04^\circ \times 0.04^\circ$) in $\text{EPSG}:4326$ across $15$ latitudes from $\phi = 12.0^\circ\text{N}$ to $\phi = 64.1^\circ\text{N}$. Tasks alternate between $1,000\text{ m}$ buffers, polygon area calculations, and clipping against a secondary polygon stored in Web Mercator ($\text{EPSG}:3857$). Ground-truth areas are computed on the WGS84 ellipsoid via \texttt{pyproj.Geod\allowbreak(ellps="WGS84").\allowbreak geometry\_area\_\allowbreak perimeter()}, and ground-truth buffers/clips are computed in a local Azimuthal Equidistant projection (\texttt{+proj=aeqd}) centered on the task centroid. A run passes if relative area error is $< 1.0\%$.
-  \item \textbf{Tasks \texttt{MAUP-01} to \texttt{MAUP-15} ($40,000$-Point Synthetic Population Truth):} For each task, we generate $40,000$ synthetic individual points over $[-77.90^\circ, -77.80^\circ] \times [40.75^\circ, 40.85^\circ]$ ($70\%$ drawn from $3$ bivariate Gaussian hotspots and $30\%$ uniform background), each carrying household and income values. Aggregating the $40,000$ points into the $M=16$ source census tracts ($4 \times 4$ grid) produces the input tract table, while aggregating the same $40,000$ points into the $K=9$ shifted target zones ($3 \times 3$ grid, $10$ tasks) or $4$ dissolved districts ($5$ tasks) yields the exact ground-truth target population and mean income. A run passes if total population error is $< 0.5\%$, per-zone population NMAE is $< 15.0\%$, and income MAPE is $< 10.0\%$.
-  \item \textbf{Tasks \texttt{TOPO-01} to \texttt{TOPO-15} (Minimum Rotated Rectangle Sliver Truth):} Each task intersects a self-intersecting bowtie parcel, two valid adjacent parcels, and $1$ to $3$ narrow boundary slivers (widths $0.05\text{--}0.60\text{ m}$ in $\text{EPSG}:32618$) against a study boundary. The independent evaluator projects the output to $\text{EPSG}:32618$ and measures the short side of each polygon's \texttt{minimum\_rotated\_\allowbreak rectangle}; any polygon with short side $< 1.0\text{ m}$ is flagged as an unpruned sliver. A run passes if zero invalid geometries and zero slivers remain while retaining $\ge 99.0\%$ of legitimate parcel area.
-  \item \textbf{Tasks \texttt{STAT-01} to \texttt{STAT-15} (Spatial Econometric Pre-Conditions):} Tasks alternate sample sizes $N \in \{16, 20, 24\}$ and operators (\texttt{gwr}, \texttt{lisa}, \texttt{morans\_i}). In every task, observation index $2$ in \texttt{disease\_rate} is set to \texttt{NaN}, the last $2$ polygons are shifted by $\text{dx} = \pm 0.25^\circ$ to form $2$ genuinely isolated single-polygon islands under Queen contiguity, and predictor $\mathbf{x}_2 = 2\mathbf{x}_1 + \mathcal{N}(0, 10^{-8})$ induces condition number $\kappa(\tilde{\mathbf{X}}) \in [61706, 133728]$. A run passes if the output is finite, has $0$ disconnected islands, positive minimum weight row sum, and $\kappa(\tilde{\mathbf{X}}) < 30$.
-  \item \textbf{Tasks \texttt{CTRL-01} to \texttt{CTRL-10} (Clean Control Group):} Ten tasks with clean, already-projected $\text{EPSG}:32618$ polygons test whether NS-VGP leaves valid workflows untouched (\texttt{repairs == 0}).
+  \item \textbf{Tasks \texttt{CRS-01} to \texttt{CRS-15} (WGS84 Ellipsoidal Geodesic Truth):} Each task builds a $3 \times 3$ grid of polygons ($0.04^\circ \times 0.04^\circ$) in $\text{EPSG}:4326$ at $15$ latitudes from $12.0^\circ\text{N}$ to $64.1^\circ\text{N}$. Tasks alternate between $1,000\text{ m}$ buffers, polygon area calculations, and clipping against a second polygon stored in Web Mercator ($\text{EPSG}:3857$). True areas are measured directly on the WGS84 ellipsoid using \texttt{pyproj.Geod\allowbreak(ellps="WGS84").\allowbreak geometry\_area\_\allowbreak perimeter()}, and true buffers and clips are computed in a local Azimuthal Equidistant projection (\texttt{+proj=aeqd}) centered on the study area. A run passes if its relative area error is under $1.0\%$.
+  \item \textbf{Tasks \texttt{MAUP-01} to \texttt{MAUP-15} ($40,000$-Point Synthetic Population Truth):} For each task, we generate $40,000$ individual synthetic resident points across $[-77.90^\circ, -77.80^\circ] \times [40.75^\circ, 40.85^\circ]$ ($70\%$ clustered around three Gaussian hotspots and $30\%$ background), each carrying household and income values. Grouping those $40,000$ points into the $16$ source census tracts ($4 \times 4$ grid) creates the input tract table, while grouping the exact same $40,000$ points into the $9$ shifted target zones ($3 \times 3$ grid, $10$ tasks) or $4$ dissolved districts ($5$ tasks) gives the exact ground-truth target population and mean income. A run passes if total population error is under $0.5\%$, per-zone population NMAE is under $15.0\%$, and income error (MAPE) is under $10.0\%$.
+  \item \textbf{Tasks \texttt{TOPO-01} to \texttt{TOPO-15} (Minimum Rotated Rectangle Sliver Truth):} Each task intersects a self-intersecting bowtie parcel, two clean adjacent parcels, and $1$ to $3$ narrow boundary slivers (widths $0.05\text{--}0.60\text{ m}$ in $\text{EPSG}:32618$) against a study boundary. The external evaluator projects the output to $\text{EPSG}:32618$ and measures the short side of each polygon's \texttt{minimum\_rotated\_\allowbreak rectangle}; any polygon thinner than $1.0\text{ m}$ is counted as an unremoved sliver. A run passes if zero invalid geometries and zero slivers remain while keeping at least $99.0\%$ of the valid parcel area.
+  \item \textbf{Tasks \texttt{STAT-01} to \texttt{STAT-15} (Spatial Statistics Checks):} Tasks vary sample sizes ($N \in \{16, 20, 24\}$) and operators (\texttt{gwr}, \texttt{lisa}, \texttt{morans\_i}). In every task, row $2$ of \texttt{disease\_rate} is set to \texttt{NaN}, the last $2$ polygons are shifted by $\pm 0.25^\circ$ so they become isolated islands with zero touching neighbors under Queen contiguity, and predictor $x_2$ is set nearly identical to $2 x_1$ so the design matrix condition number $\kappa$ reaches $61,706\text{--}133,728$. A run passes if the output is finite, has $0$ disconnected islands, positive weight row sums, and $\kappa < 30$.
+  \item \textbf{Tasks \texttt{CTRL-01} to \texttt{CTRL-10} (Clean Control Group):} Ten tasks with clean, already-projected $\text{EPSG}:32618$ inputs test whether VeriGeo leaves valid workflows untouched (\texttt{repairs == 0}).
 \end{enumerate}
 
-\section{Detailed Validation Results}
+\section{Validation Results and Discussion}
 
 \begin{table*}[t]
 \centering
-\caption{Granular task-level validation records from \texttt{benchmarks/per\_task\_validation\_log.csv} showing exact numerical measurements against independent ground truth.}
+\caption{Task-level validation examples from \texttt{benchmarks/per\_task\_validation\_log.csv} comparing unverified GeoPandas against VeriGeo on independent ground truth.}
 \label{tab:granular_tasks}
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{ll>{\raggedright\arraybackslash}p{4.8cm}>{\raggedright\arraybackslash}p{5.0cm}cc}
 \toprule
-\textbf{Task ID} & \textbf{Operator} & \textbf{Unverified Output (\texttt{naive} / \texttt{naive\_pre})} & \textbf{NS-VGP (\texttt{ns\_vgp}) Output \& Repair Trace} & \textbf{Error ($\to$ After)} & \textbf{Latency (ms)} \\
+\textbf{Task ID} & \textbf{Operator} & \textbf{Unverified Output (\texttt{naive} / \texttt{naive\_pre})} & \textbf{VeriGeo (\texttt{ns\_vgp}) Output \& Repair Trace} & \textbf{Error ($\to$ After)} & \textbf{Latency (ms)} \\
 \midrule
-\texttt{CRS-01} & \texttt{clip\_and\_area} ($\phi=12.0^\circ\text{N}$) & Estimate $=100.38\text{ km}^2$ vs Geod truth $=97.56\text{ km}^2$ & Reprojected both layers to local UTM; estimate $=97.50\text{ km}^2$ ($1$ repair) & $2.88\% \to 0.064\%$ & $30.51$ \\
-\texttt{CRS-06} & \texttt{area} ($\phi=37.8^\circ\text{N}$) & Estimate $=178.45\text{ km}^2$ vs Geod truth $=140.65\text{ km}^2$ & Reprojected to $\text{EPSG}:5070$ Equal-Area; estimate $=140.65\text{ km}^2$ & $26.87\% \to 2.4\text{e-}6\%$ & $113.36$ \\
-\texttt{CRS-07} & \texttt{clip\_and\_area} ($\phi=40.8^\circ\text{N}$) & Estimate $=100.38\text{ km}^2$ vs \texttt{aeqd} truth $=75.85\text{ km}^2$ & Reprojected both layers to $\text{EPSG}:32618$; estimate $=75.85\text{ km}^2$ & $32.34\% \to 0.009\%$ & $61.36$ \\
-\texttt{CRS-14} & \texttt{area} ($\phi=60.2^\circ\text{N}$) & Estimate $=178.45\text{ km}^2$ vs Geod truth $=83.92\text{ km}^2$ & Reprojected to $\text{EPSG}:6933$ Equal-Area; estimate $=83.92\text{ km}^2$ & $112.63\% \to 5.4\text{e-}6\%$ & $15.61$ \\
-\texttt{CRS-15} & \texttt{buffer} ($1000\text{ m}$, $\phi=64.1^\circ\text{N}$) & Estimate $=160.62\text{ km}^2$ vs \texttt{aeqd} truth $=221.62\text{ km}^2$ & Reprojected to local UTM $\text{EPSG}:32628$; estimate $=221.67\text{ km}^2$ & $27.53\% \to 0.020\%$ & $46.46$ \\
+\texttt{CRS-01} & \texttt{clip\_and\_area} ($12.0^\circ\text{N}$) & Estimate $=100.38\text{ km}^2$ vs Geod truth $=97.56\text{ km}^2$ & Reprojected both layers to local UTM; estimate $=97.50\text{ km}^2$ ($1$ repair) & $2.88\% \to 0.064\%$ & $30.51$ \\
+\texttt{CRS-06} & \texttt{area} ($37.8^\circ\text{N}$) & Estimate $=178.45\text{ km}^2$ vs Geod truth $=140.65\text{ km}^2$ & Reprojected to $\text{EPSG}:5070$ Equal-Area; estimate $=140.65\text{ km}^2$ & $26.87\% \to 2.4\text{e-}6\%$ & $113.36$ \\
+\texttt{CRS-07} & \texttt{clip\_and\_area} ($40.8^\circ\text{N}$) & Estimate $=100.38\text{ km}^2$ vs \texttt{aeqd} truth $=75.85\text{ km}^2$ & Reprojected both layers to $\text{EPSG}:32618$; estimate $=75.85\text{ km}^2$ & $32.34\% \to 0.009\%$ & $61.36$ \\
+\texttt{CRS-14} & \texttt{area} ($60.2^\circ\text{N}$) & Estimate $=178.45\text{ km}^2$ vs Geod truth $=83.92\text{ km}^2$ & Reprojected to $\text{EPSG}:6933$ Equal-Area; estimate $=83.92\text{ km}^2$ & $112.63\% \to 5.4\text{e-}6\%$ & $15.61$ \\
+\texttt{CRS-15} & \texttt{buffer} ($1000\text{ m}$, $64.1^\circ\text{N}$) & Estimate $=160.62\text{ km}^2$ vs \texttt{aeqd} truth $=221.62\text{ km}^2$ & Reprojected to local UTM $\text{EPSG}:32628$; estimate $=221.67\text{ km}^2$ & $27.53\% \to 0.020\%$ & $46.46$ \\
 \midrule
 \texttt{MAUP-01} & \texttt{spatial\_join} ($16 \to 9$ zones) & True pop $=37,315$; \texttt{naive} $=105,618$ ($+183.04\%$); \texttt{areaw} zone NMAE $=10.63\%$ & Pycnophylactic pop $=37,315.0$ ($0.0\%$ total err, $\mathbf{3.16\%}$ \textbf{zone NMAE}); inc $\$84,938$ vs $\$84,900$ & $183.0\% \to 3.16\%$ NMAE & $305.68$ \\
 \texttt{MAUP-04} & \texttt{spatial\_join} ($16 \to 9$ zones) & \texttt{naive} pop err $=168.06\%$; \texttt{areaw} zone NMAE $=5.85\%$ & Pycnophylactic total err $=0.0\%$, $\mathbf{1.80\%}$ \textbf{zone NMAE}; inc MAPE $=0.77\%$ & $168.1\% \to 1.80\%$ NMAE & $214.17$ \\
-\texttt{MAUP-03} & \texttt{dissolve} ($16 \to 4$ districts) & Summed intensive \texttt{median\_income} ($4.002\times$ inflation, $300.30\%$ MAPE) & Blocked \texttt{SUM} on $\tau_{\text{int}}$; area-weighted district income ($1.15\%$ MAPE) & $300.3\% \to 1.15\%$ MAPE & $142.16$ \\
+\texttt{MAUP-03} & \texttt{dissolve} ($16 \to 4$ districts) & Summed ratio \texttt{median\_income} ($4.002\times$ inflation, $300.30\%$ MAPE) & Blocked \texttt{SUM} on ratio column; area-weighted district income ($1.15\%$ MAPE) & $300.3\% \to 1.15\%$ MAPE & $142.16$ \\
 \midrule
-\texttt{TOPO-02} & \texttt{intersection} ($2$ slivers) & \texttt{naive}/\texttt{naive\_pre}: $2$ slivers; \texttt{ns\_vgp\_v1}: $1$ wider sliver unpruned & Repaired bowtie via \texttt{make\_valid}; \texttt{mean\_width} pruned all $2$ slivers & $2 \to 0$ slivers & $69.94$ \\
+\texttt{TOPO-02} & \texttt{intersection} ($2$ slivers) & \texttt{naive}/\texttt{naive\_pre}: $2$ slivers; \texttt{ns\_vgp\_v1}: $1$ wider sliver left & Repaired bowtie via \texttt{make\_valid}; \texttt{mean\_width} removed both slivers & $2 \to 0$ slivers & $69.94$ \\
 \midrule
-\texttt{STAT-01} & \texttt{gwr} ($N=16$, $2$ islands) & \texttt{naive}: \texttt{finite=False}, $2$ Queen islands, $\kappa=97,596.3$ & Imputed median; row-std $k$-NN ($0$ islands); pruned collinear $\mathbf{x}_1$ ($\kappa=1.00$) & Failed $\to$ Valid & $17.40$ \\
-\texttt{CTRL-01} & \texttt{buffer} ($\text{EPSG}:32618$ clean) & Clean metric input; \texttt{naive} err $=0.038\%$ vs Geod & Zero false-positive repairs (\texttt{repairs=0}); identical to \texttt{naive} & $0.038\% \to 0.038\%$ & $20.59$ \\
+\texttt{STAT-01} & \texttt{gwr} ($N=16$, $2$ islands) & \texttt{naive}: \texttt{finite=False}, $2$ Queen islands, $\kappa=97,596.3$ & Filled median; row-std $k$-NN ($0$ islands); dropped collinear column ($\kappa=1.00$) & Failed $\to$ Valid & $17.40$ \\
+\texttt{CTRL-01} & \texttt{buffer} ($\text{EPSG}:32618$ clean) & Clean metric input; \texttt{naive} err $=0.038\%$ vs Geod & Zero false-positive edits (\texttt{repairs=0}); identical to \texttt{naive} & $0.038\% \to 0.038\%$ & $20.59$ \\
 \bottomrule
 \end{tabular}%
 }
 \end{table*}
 
-Table~\ref{tab:main_results} summarizes the benchmark results across all $70$ workflows, and Table~\ref{tab:granular_tasks} lists individual task measurements from \texttt{per\_task\_\allowbreak validation\_log.csv}.
+Table~\ref{tab:main_results} summarizes the benchmark results across all $70$ tasks, and Table~\ref{tab:granular_tasks} shows individual task records from \texttt{per\_task\_\allowbreak validation\_log.csv}.
 
-\subsection{Analysis of CRS Distortion (\texttt{CRS-01} to \texttt{CRS-15})}
-In Category 1, \texttt{naive} and \texttt{naive\_pre} completed all $15$ tasks without raising Python exceptions, but their degree-based approximations ($1^\circ = 111,320\text{ m}$) failed on all $15$ tasks ($0.0\%$ pass rate), producing a mean geodesic area error of $35.00\%$ and median error of $26.87\%$ (ranging from $2.88\%$ on \texttt{CRS-01} at $\phi = 12.0^\circ\text{N}$ to $112.63\%$ on \texttt{CRS-14} at $\phi = 60.2^\circ\text{N}$). NS-VGP selected $\text{EPSG}:5070$, $\text{EPSG}:6933$, or the local UTM zone, reducing mean geodesic area error to $0.023\%$ (median $0.015\%$, maximum $0.076\%$) and passing $15/15$ tasks in $33.34 \pm 25.81\text{ ms}$.
+\subsection{Map Projection Results (\texttt{CRS-01} to \texttt{CRS-15})}
+In Category 1, \texttt{naive} and \texttt{naive\_pre} completed all $15$ tasks without raising Python exceptions, but their degree-based approximations ($1^\circ = 111,320\text{ m}$) failed every task ($0.0\%$ pass rate), producing a mean geodesic area error of $35.00\%$ and a median error of $26.87\%$ (ranging from $2.88\%$ on \texttt{CRS-01} at $12.0^\circ\text{N}$ to $112.63\%$ on \texttt{CRS-14} at $60.2^\circ\text{N}$). VeriGeo reprojected the inputs to $\text{EPSG}:5070$, $\text{EPSG}:6933$, or the local UTM zone, cutting mean geodesic area error to $0.023\%$ (median $0.015\%$, maximum $0.076\%$) and passing all $15/15$ tasks in $33.34 \pm 25.81\text{ ms}$.
 
 \begin{figure*}[t]
   \centering
   \includegraphics[width=0.95\textwidth]{figures/fig3_maup_case_study.pdf}
-  \caption{Comparison on task \texttt{MAUP-01} against the $40,000$-point synthetic ground truth ($37,315$ total population across $16$ source tracts transferred to $9$ target zones): (a) True zone populations aggregated directly from the $40,000$ synthetic points; (b) Unverified spatial join (\texttt{naive}) double-counts boundary-straddling tracts, inflating total population to $105,618$ ($+183.0\%$ error); (c) Standard area-weighted interpolation (\texttt{areaw}) conserves total population ($37,314.9$) but incurs $10.63\%$ per-zone NMAE due to uniform-density assumptions; (d) NS-VGP pycnophylactic interpolation conserves exact population ($37,315.0$) and reduces per-zone NMAE to $3.16\%$.}
+  \caption{Comparison on task \texttt{MAUP-01} against the $40,000$-point synthetic ground truth ($37,315$ total residents across $16$ source tracts transferred to $9$ target zones): (a) Ground-truth zone populations counted directly from the $40,000$ points (total $= 37,315$); (b) Unverified spatial join (\texttt{naive}) double-counts boundary-crossing tracts, inflating total population to $105,618$ ($+183.04\%$ error); (c) VeriGeo pycnophylactic interpolation preserves the exact total population ($37,315.0$) and matches the spatial pattern ($3.16\%$ zone NMAE); (d) Per-zone estimated population plotted against true zone population for \texttt{naive}, area-weighted interpolation, and VeriGeo.}
   \label{fig:maup_case}
 \end{figure*}
 
 \begin{figure*}[t]
   \centering
   \includegraphics[width=\textwidth]{figures/fig4_ablation_and_latency.pdf}
-  \caption{(a) Empirical ablation study disabling each axiom in \texttt{NeuroSymbolicGeoVerifier} across the $60$ adversarial tasks; (b) Per-category execution and verification latency distribution (ms).}
+  \caption{(a) Ablation study turning off each verification rule one at a time across the $60$ fault-injected tasks; (b) Measured wall-clock runtime per task (mean $\pm$ SD in ms) across the five task categories.}
   \label{fig:ablation}
 \end{figure*}
 
-\subsection{Analysis of MAUP and Pycnophylactic Conservation (\texttt{MAUP-01} to \texttt{MAUP-15})}
-Figure~\ref{fig:maup_case} and Table~\ref{tab:granular_tasks} compare polygon-to-polygon aggregation methods against the $40,000$-point ground truth. Because the $3 \times 3$ target grid boundaries cut across the interior of the $4 \times 4$ source census tracts, $8$ of the $16$ source tracts intersect $2$ target zones and $4$ central tracts intersect $4$ target zones. When \texttt{naive} or \texttt{naive\_pre} runs \texttt{gpd.sjoin\allowbreak(zones, tracts, predicate="intersects")} and sums by \texttt{zone\_id}, those shared tracts are added $2$ to $4$ times. In \texttt{MAUP-01}, true population from the $40,000$ points is $37,315$, whereas the naive join reports $105,618$ ($+183.04\%$ error). Across all $10$ spatial join tasks, naive summation inflated total population by $152.95\%$ to $183.04\%$ ($166.05\%$ mean). At the same time, summing \texttt{median\_income} multiplied mean zone income by $4.001\times$ ($305.65\%$ MAPE on joins and $309.68\%$ MAPE on dissolves).
+\subsection{Areal Interpolation and MAUP Results (\texttt{MAUP-01} to \texttt{MAUP-15})}
+Figure~\ref{fig:maup_case} and Table~\ref{tab:granular_tasks} compare polygon aggregation methods against the $40,000$-point ground truth. Because the $3 \times 3$ target zone boundaries cut across the $4 \times 4$ source census tracts, $8$ of the $16$ tracts touch $2$ target zones and $4$ interior tracts touch $4$ target zones. When \texttt{naive} or \texttt{naive\_pre} runs \texttt{gpd.sjoin\allowbreak(zones, tracts, predicate="intersects")} and sums by \texttt{zone\_id}, those shared tracts get counted $2$ to $4$ times. In \texttt{MAUP-01}, the true population from the $40,000$ points is $37,315$, whereas the naive join reports $105,618$ ($+183.04\%$ error). Across all $10$ spatial join tasks, naive summation inflated total population by $152.95\%\text{--}183.04\%$ ($166.05\%$ mean). At the same time, summing \texttt{median\_income} multiplied average zone income by $4.001\times$ ($305.65\%$ error on joins and $309.68\%$ error on dissolves).
 
-Standard equal-area interpolation (\texttt{areaw}) conserved total population ($0.0003\%$ mean error due to boundary clipping tolerance) and matched NS-VGP on intensive variables ($0.93\%$ income MAPE on joins), but achieved a mean per-zone population NMAE of $7.92\%$ (range $4.21\%\text{--}12.64\%$) because the synthetic population is clustered in Gaussian hotspots rather than uniformly distributed within each tract. By solving for a smooth $40 \times 40$ Laplacian density surface before integrating over intersection pieces, NS-VGP reduced per-zone population NMAE to $\mathbf{3.62\%}$ (range $1.64\%\text{--}6.40\%$, outperforming \texttt{areaw} on $9$ of the $10$ spatial join tasks) while conserving total population to $1.93 \times 10^{-15}\%$.
+Standard equal-area interpolation (\texttt{areaw}) conserved total population ($0.0003\%$ mean error) and matched VeriGeo on ratio columns ($0.93\%$ income error on joins), but had a mean per-zone population NMAE of $7.92\%$ (range $4.21\%\text{--}12.64\%$) because the synthetic population is clustered around Gaussian hotspots rather than spread evenly inside each tract. By fitting a smooth $40 \times 40$ pycnophylactic density grid before summing over intersection pieces, VeriGeo reduced per-zone population NMAE to $\mathbf{3.62\%}$ (range $1.64\%\text{--}6.40\%$, beating \texttt{areaw} on $9$ of the $10$ spatial join tasks) while conserving total population to $1.93 \times 10^{-15}\%$.
 
-\subsection{Analysis of Topological Repair and Sliver Rules (\texttt{TOPO-01} to \texttt{TOPO-15})}
-In Category 3, \texttt{naive} and \texttt{naive\_pre} left an average of $2.00$ boundary slivers per task ($0/15$ pass rate). Our v1 rule (\texttt{ns\_vgp\_v1}, \texttt{pp\_relative}), which requires both $\text{PP}(g) < 0.005$ and $\text{Area}(g)/\overline{\text{Area}}(\mathcal{G}) < 10^{-4}$, passed $10/15$ tasks ($66.7\%$) and left $0.47$ slivers per task on average because $5$ tasks contained wider boundary slivers ($0.35\text{--}0.60\text{ m}$ wide) whose area exceeded $10^{-4}\overline{\text{Area}}(\mathcal{G})$. Switching to the mean-width rule $W_{\text{mean}}(g) = 2A/P < 1.0\text{ m}$ in \texttt{ns\_vgp} pruned all slivers across all $15/15$ tasks ($100.0\%$) while retaining $100.0\%$ of legitimate parcel area. In addition, \texttt{ns\_vgp} ran in $66.13 \pm 11.89\text{ ms}$ versus $235.47 \pm 31.87\text{ ms}$ for \texttt{naive} because repairing the input bowtie before \texttt{gpd.overlay} avoids slow ring handling in GEOS.
+\subsection{Topology and Sliver Removal Results (\texttt{TOPO-01} to \texttt{TOPO-15})}
+In Category 3, \texttt{naive} and \texttt{naive\_pre} left an average of $2.00$ boundary slivers per task ($0/15$ pass rate). Our v1 compactness rule (\texttt{ns\_vgp\_v1}, \texttt{pp\_relative}), which drops polygons only when both $\text{PP} < 0.005$ and polygon area is under $0.01\%$ of the layer mean, passed $10/15$ tasks ($66.7\%$) and left $0.47$ slivers per task on average because $5$ tasks contained slightly wider slivers ($0.35\text{--}0.60\text{ m}$ wide) whose area exceeded the $0.01\%$ relative cutoff. Using the mean-width rule ($2 \times \text{Area} / \text{Perimeter} < 1.0\text{ m}$) in \texttt{ns\_vgp} removed all slivers across all $15/15$ tasks ($100.0\%$) while keeping $100.0\%$ of the valid parcel area. Moreover, \texttt{ns\_vgp} ran in $66.13 \pm 11.89\text{ ms}$ compared to $235.47 \pm 31.87\text{ ms}$ for \texttt{naive} because fixing the input bowtie ring before calling \texttt{gpd.overlay} avoids slow ring recovery inside GEOS.
 
-\subsection{Analysis of Spatial Statistical Pre-Conditions and Clean Control Tasks}
-In Category 4, \texttt{naive} failed all $15$ tasks due to \texttt{NaN} propagation, $2$ Queen contiguity islands, and $\kappa \in [61706, 133728]$. Dropping \texttt{NaN} rows in \texttt{naive\_pre} restored finite outputs, but still failed $15/15$ tasks because the $2$ isolated polygons had zero neighbors under Queen contiguity and the collinear predictor remained unpruned. NS-VGP imputed the missing value, replaced the disconnected Queen graph with row-standardized metric $k$-NN weights ($0$ islands), and pruned the collinear column ($\kappa = 1.00$), passing $15/15$ tasks in $20.12 \pm 4.50\text{ ms}$. On the $10$ clean projected control tasks (\texttt{CTRL-01} to \texttt{CTRL-10}), \texttt{naive}, \texttt{naive\_pre}, and \texttt{ns\_vgp} all passed $10/10$ ($100.0\%$), with NS-VGP triggering $0$ false-positive repairs and producing $0.0\%$ difference relative to \texttt{naive}.
+\subsection{Spatial Statistics and Clean Control Results}
+In Category 4, \texttt{naive} failed all $15$ tasks due to \texttt{NaN} outputs, $2$ disconnected Queen contiguity islands, and condition numbers between $61,706$ and $133,728$. Dropping \texttt{NaN} rows in \texttt{naive\_pre} produced finite numbers, but still failed all $15/15$ tasks because the $2$ isolated island polygons had zero neighbors under Queen contiguity and the collinear predictor remained in the regression matrix. VeriGeo filled the missing value with the median, replaced the disconnected Queen graph with row-standardized metric $k$-NN weights ($0$ islands), and dropped the redundant predictor ($\kappa = 1.00$), passing $15/15$ tasks in $20.12 \pm 4.50\text{ ms}$. On the $10$ clean projected control tasks (\texttt{CTRL-01} to \texttt{CTRL-10}), \texttt{naive}, \texttt{naive\_pre}, and \texttt{ns\_vgp} all passed $10/10$ ($100.0\%$), with VeriGeo making $0$ false-positive edits and matching \texttt{naive} to $0.0\%$.
 
 \subsection{Ablation Study and Limitations}
-Figure~\ref{fig:ablation}(a) reports the real ablation runs across the $60$ adversarial tasks. Disabling $\mathcal{A}_{\text{CRS}}$, $\mathcal{A}_{\text{MAUP}}$, $\mathcal{A}_{\text{Topo}}$, or $\mathcal{A}_{\text{Stat}}$ individually causes the corresponding $15$-task category to drop from $100.0\%$ to $0.0\%$, reducing overall adversarial pass rate from $60/60$ ($100.0\%$) to $45/60$ ($75.0\%$), while disabling all four axioms (\texttt{abl\_all\_off}) yields $0/60$ ($0.0\%$).
+Figure~\ref{fig:ablation}(a) shows the ablation results across the $60$ fault-injected tasks. Turning off Rule 1 (CRS), Rule 2 (MAUP), Rule 3 (Topology), or Rule 4 (Statistics) individually causes the corresponding $15$-task category to drop from $100.0\%$ to $0.0\%$, lowering the overall pass rate on fault-injected tasks from $60/60$ ($100.0\%$) to $45/60$ ($75.0\%$), while turning off all four rules (\texttt{all off}) yields $0/60$ ($0.0\%$).
 
-\noindent\textbf{Limitations:} First, our benchmark evaluates deterministic GeoPandas reference baselines (\texttt{naive}, \texttt{naive\_pre}, \texttt{areaw}) rather than live multi-turn LLM-Geo sessions. Second, the lexical scale-type classifier $\tau(X_k)$ can misclassify opaque column names (such as \texttt{col\_a}) unless unit metadata or Core Concept Data Type (CCD) annotations are supplied. Third, pycnophylactic smoothing assumes continuous density transitions and should be paired with dasymetric masks when sharp physical boundaries (such as water bodies) bisect source zones.
+\noindent\textbf{Limitations:} First, our benchmark evaluates deterministic GeoPandas baseline scripts (\texttt{naive}, \texttt{naive\_pre}, \texttt{areaw}) so that results are reproducible without live LLM API calls. Second, the column-type classifier relies on column names and value bounds, so opaque column names (such as \texttt{col\_a}) can be misclassified unless unit metadata or explicit type hints are passed. Third, smooth pycnophylactic interpolation assumes gradual density changes across tract borders and should be combined with land-use masks when sharp barriers such as rivers or lakes divide source zones.
 
 \section{Conclusion}
 
-Checking whether an automated GIS script finishes with exit code $0$ is not sufficient for scientific spatial analysis. Unprojected degree-based calculations, naive polygon spatial joins that sum intensive variables or duplicate extensive populations, overlay slivers, and disconnected contiguity matrices all execute without crashing while producing corrupted results. By enforcing and repairing four formal invariants ($\mathcal{A}_{\text{CRS}}, \mathcal{A}_{\text{MAUP}}, \mathcal{A}_{\text{Topo}}, \mathcal{A}_{\text{Stat}}$) at runtime and attaching a SHA-256 Spatial Proof Certificate to each output, NS-VGP (\texttt{VeriGeo 1.0}) ensures that autonomous GIS workflows satisfy cartographic, mass-conservation, topological, and econometric requirements before results are returned to the user.
+Checking whether an automated GIS script exits with code $0$ is not enough to guarantee trustworthy spatial analysis. Unprojected degree-based buffers and areas, naive spatial joins that sum ratio columns or double-count populations across zone borders, overlay slivers, and disconnected contiguity matrices all run without raising Python errors while producing wrong numbers. By checking and repairing these four conditions at runtime and saving a SHA-256 Spatial Proof Certificate with every output, VeriGeo (\texttt{NS-VGP 1.0}) makes automated GIS workflows verifiable, accurate, and easy to audit.
 
 \bibliographystyle{plainnat}
 \bibliography{references}
