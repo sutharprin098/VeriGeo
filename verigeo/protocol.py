@@ -447,10 +447,11 @@ def pycnophylactic_areal_interpolation(
     tgt = target_gdf.copy()
 
     # Ensure both are in an Equal-Area metric CRS before computing intersection areas
-    if src.crs is None:
-        src = src.set_crs("EPSG:4326")
-    if tgt.crs is None:
-        tgt = tgt.set_crs(src.crs)
+    if src.crs is None or tgt.crs is None:
+        raise ValueError(
+            "Both source_gdf and target_gdf must have an explicitly defined CRS; "
+            "assign the correct source CRS before interpolation."
+        )
     if src.crs != tgt.crs:
         tgt = tgt.to_crs(src.crs)
 
@@ -730,9 +731,12 @@ class NeuroSymbolicGeoVerifier:
         # AXIOM 1: Metric & Geodesic CRS Invariant
         if "A_CRS" in off:
             crs_axiom = _skipped("A_CRS", "Metric & Geodesic CRS Invariant")
-            if gdf1.crs is None:
-                gdf1 = gdf1.set_crs("EPSG:4326")
-            if gdf2 is not None and gdf2.crs is not None and gdf1.crs is not None and gdf2.crs != gdf1.crs:
+            if gdf1.crs is None or (gdf2 is not None and gdf2.crs is None):
+                raise ValueError(
+                    "Every input layer must have an explicitly defined CRS, including "
+                    "when A_CRS is disabled for an ablation."
+                )
+            if gdf2 is not None and gdf2.crs != gdf1.crs:
                 gdf2 = gdf2.to_crs(gdf1.crs)  # plain CRS alignment only, no metric projection
         else:
             gdf1, gdf2, params, crs_axiom = self._verify_and_heal_crs(
@@ -847,10 +851,11 @@ class NeuroSymbolicGeoVerifier:
         )
         require_equal_area = op_norm in EQUAL_AREA_OPERATORS or op_norm in AGGREGATION_OPERATORS
 
-        if gdf1.crs is None:
-            gdf1 = gdf1.set_crs("EPSG:4326")
-        if gdf2 is not None and gdf2.crs is None:
-            gdf2 = gdf2.set_crs("EPSG:4326")
+        if gdf1.crs is None or (gdf2 is not None and gdf2.crs is None):
+            raise ValueError(
+                "Every input layer must have an explicitly defined CRS. VeriGeo will not "
+                "assume EPSG:4326 for coordinates with unknown provenance."
+            )
 
         crs1_str = str(gdf1.crs.to_string() if hasattr(gdf1.crs, "to_string") else gdf1.crs)
         crs2_str = (
@@ -1657,7 +1662,12 @@ def qgis_layer_to_gdf(layer: "QgsVectorLayer") -> "gpd.GeoDataFrame":
             geoms.append(shape(json.loads(g.asJson())))
         else:
             geoms.append(None)
-    crs_auth = layer.crs().authid() if layer.crs().isValid() else "EPSG:4326"
+    if not layer.crs().isValid():
+        raise ValueError(
+            f"QGIS layer '{layer.name()}' has no valid CRS. Assign its correct source CRS "
+            "in QGIS before exporting it to VeriGeo."
+        )
+    crs_auth = layer.crs().authid()
     return gpd.GeoDataFrame(records, geometry=geoms, crs=crs_auth)
 
 
