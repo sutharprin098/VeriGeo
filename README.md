@@ -28,6 +28,8 @@ Libraries like GeoPandas and Shapely allow invalid cartographic, aggregation, to
 | :--- | :--- | :--- |
 | **Rule 1: Map Projections & CRS** | Metric operations (`buffer`, `area`, `spatial_join`, `dissolve`, `intersection`) must use projected coordinates (meters/feet) and matching CRS across layers. | Reprojects geographic (`EPSG:4326`) or mismatched layers to **Equal-Area** (`EPSG:5070` CONUS, `EPSG:3035` Europe, `EPSG:6933` global) for area/aggregation operations or **local UTM** (`EPSG:326xx`/`327xx`) for distance/buffer operations. |
 | **Rule 2: Counts vs. Ratios (MAUP)** | Ratio columns (`median_income`, `pop_density`, `rate`, `pct`, `ndvi`, `pm25`) must never be summed (`SUM`), and count columns (`population`, `households`, `crimes`) must conserve total count across zone transfers. | Classifies columns into counts, ratios, and identifiers; runs **Tobler's smooth pycnophylactic interpolation** ($40 \times 40$ grid, 35 smoothing passes with exact tract rescaling) for counts and **area-weighted averaging** for ratios. |
+
+**MAUP boundaries:** The value-range fallback can still classify an opaque non-negative integer column as extensive; supply `semantic_overrides` for ambiguous attributes. Area-weighted averaging is not generally an exact aggregation for medians or socioeconomic rates. The interpolation routine normalizes each source total across its target intersections and does not itself reject incomplete target coverage; callers must validate that target zones cover the intended source support.
 | **Rule 3: Geometry Validity & Overlay Slivers** | Inputs and outputs must pass Shapely validity checks; overlay outputs are also tested for thin, elongated fragments. | Repairs invalid geometries with `make_valid()` and removes fragments only when equivalent width is `< 1.0 m` and Polsby-Popper compactness is `< 0.25`. A legitimate `0.80 m` canal is still removed in `TOPO-15`. |
 | **Rule 4: Spatial Statistics Pre-Checks** | Checks target-variable finite values/variance, spatial-weight connectivity, and predictor-matrix condition number. | Median-imputes missing target values when auto-healing is enabled, switches disconnected contiguity weights to row-standardized k-NN, records a conditional-permutation mode for `10 ≤ N < 30`, and iteratively removes collinear predictors. The current executor does not run those permutations or fit GWR/LISA/Getis-Ord estimators. |
 
@@ -71,7 +73,7 @@ Every baseline (`naive`, `naive_pre`, `areaw`), single-rule ablation, and `ns_vg
 ### Documented Edge Cases (`3/70` Failures; `STAT-13` repaired at the pre-check level)
 
 To evaluate where rule-based verification reaches its limits, the benchmark includes four hard stress-test cases where VeriGeo fails the ground-truth threshold:
-1. **`MAUP-14` (Unmasked Coastal Water Barrier):** When `92%` of residents live on the western shore of an unmasked river/harbor (`x < -77.848`), smooth pycnophylactic interpolation diffuses population across the water boundary into eastern zones (`66.46%` zone NMAE, though total count is still conserved to `0.0000%`).
+1. **`MAUP-14` (Unmasked Coastal Water Barrier):** When `42%` of the generated residents are concentrated on the western shore of an unmasked river/harbor (`x < -77.848`), smooth pycnophylactic interpolation diffuses population across the water boundary into eastern zones (`66.46%` zone NMAE, though total count is still conserved to `0.0000%`).
 2. **`MAUP-15` (Opaque Column Naming `attr_val`):** When median household income is stored as integer dollars (`38,500–92,000`) under the generic column name `attr_val`, lexical + value-range typing misclassifies it as an additive count and sums it across dissolved districts (`3.893x` inflation).
 3. **`TOPO-15` (Narrow Infrastructure Feature `0.80 m`):** When intersecting a `0.80 m`-wide utility canal with a parcel grid, the fixed `mean_width < 1.0 m` sliver filter removes the canal segment (`67.57%` area retained).
 4. **`STAT-13` (Three Mutually Collinear Predictors; repaired pre-check):** Iterative pre-check pruning removes two of the three collinear predictors, leaving one predictor and a recorded design-matrix condition number of `κ = 1.00`. This is only a pre-check result: the shared statistics executor emits Moran-style diagnostics for GWR/LISA-labelled tasks and does not fit GWR or LISA estimators.
@@ -175,7 +177,7 @@ VeriGeo/
 │   ├── VeriGeo_Overleaf_Submission.zip
 │   └── figures/             # 300-DPI publication figures (PNG + PDF)
 ├── tests/
-│   └── test_verigeo.py      # Pytest test suite (8 end-to-end tests)
+│   └── test_verigeo.py      # 9 tests; STAT-13 pre-check regression added, execution pending
 ├── pyproject.toml
 └── LICENSE
 ```
