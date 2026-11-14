@@ -344,7 +344,7 @@ def build_stat_tasks() -> list[dict[str, Any]]:
         params: dict[str, Any] = {"column": "disease_rate", "weights": "queen"}
         if op == "gwr":
             if i == 12:
-                # STAT-13 (i == 12): 3 mutually collinear predictors (single-pass pruner drops only 1)
+                # STAT-13: three mutually collinear predictors exercise iterative pre-check pruning.
                 cols["x3_collinear"] = -1.5 * x1 + rng.normal(0, 1e-4, n)
                 params["predictors"] = ["x1", "x2_collinear", "x3_collinear"]
             else:
