@@ -644,7 +644,20 @@ class NeuroSymbolicGeoVerifier:
         sliver_compactness_threshold: float = 0.005,
         sliver_relative_area_threshold: float = 1e-4,
         min_stat_sample_size: int = 10,
+        disabled_axioms: "set[str] | frozenset[str] | None" = None,
+        sliver_rule: str = "mean_width",
+        sliver_min_width_m: float = 1.0,
     ) -> None:
+        """`disabled_axioms` (subset of A_CRS, A_MAUP, A_TOPO, A_STAT) switches individual
+        checks off entirely, which is used for the real ablation study.
+
+        `sliver_rule`: "mean_width" (default, v2: polygon mean width 2A/P below
+        `sliver_min_width_m` metres) or "pp_relative" (v1: Polsby-Popper below threshold AND
+        area below a fraction of the mean output area). v1 missed wider slivers in our benchmark.
+        """
+        self.sliver_rule = sliver_rule
+        self.sliver_min_width_m = sliver_min_width_m
+        self.disabled_axioms = frozenset(disabled_axioms or ())
         self.auto_heal = auto_heal
         self.sliver_compactness_threshold = sliver_compactness_threshold
         self.sliver_relative_area_threshold = sliver_relative_area_threshold
@@ -693,36 +706,58 @@ class NeuroSymbolicGeoVerifier:
         repairs_applied: list[str] = []
         axiom_results: list[AxiomCheckResult] = []
 
-        # ------------------------------------------------------------------
-        # AXIOM 3 (Pre-Check): Topological & 2D Manifold Validity on Inputs
-        # ------------------------------------------------------------------
-        gdf1, gdf2, topo_pre = self._verify_and_heal_topology_pre(gdf1, gdf2, repairs_applied)
+        def _skipped(axiom_id: str, name: str) -> AxiomCheckResult:
+            return AxiomCheckResult(
+                axiom_id=axiom_id,
+                axiom_name=name,
+                status="NOT_APPLICABLE",
+                pre_condition_met=True,
+                post_condition_met=True,
+                formal_expression="axiom disabled (ablation)",
+            )
 
-        # ------------------------------------------------------------------
+        off = self.disabled_axioms
+
+        # AXIOM 3 (Pre-Check): Topological & 2D Manifold Validity on Inputs
+        if "A_TOPO" in off:
+            topo_pre = _skipped("A_TOPO", "Topological 9-Intersection & 2D Manifold Validity Invariant")
+        else:
+            gdf1, gdf2, topo_pre = self._verify_and_heal_topology_pre(gdf1, gdf2, repairs_applied)
+
         # AXIOM 1: Metric & Geodesic CRS Invariant
-        # ------------------------------------------------------------------
-        gdf1, gdf2, params, crs_axiom = self._verify_and_heal_crs(
-            op_norm, gdf1, gdf2, params, repairs_applied
-        )
+        if "A_CRS" in off:
+            crs_axiom = _skipped("A_CRS", "Metric & Geodesic CRS Invariant")
+            if gdf1.crs is None:
+                gdf1 = gdf1.set_crs("EPSG:4326")
+            if gdf2 is not None and gdf2.crs is not None and gdf1.crs is not None and gdf2.crs != gdf1.crs:
+                gdf2 = gdf2.to_crs(gdf1.crs)  # plain CRS alignment only, no metric projection
+        else:
+            gdf1, gdf2, params, crs_axiom = self._verify_and_heal_crs(
+                op_norm, gdf1, gdf2, params, repairs_applied
+            )
         axiom_results.append(crs_axiom)
 
-        # ------------------------------------------------------------------
         # AXIOM 2: Semantic Scale Type & MAUP Mass-Conservation Invariant
-        # ------------------------------------------------------------------
-        params, maup_axiom_pre = self._verify_and_heal_maup_pre(
-            op_norm, gdf1, gdf2, params, semantic_schema, repairs_applied
-        )
+        if "A_MAUP" in off:
+            maup_axiom_pre = _skipped(
+                "A_MAUP", "Semantic Scale Type & MAUP Mass-Conservation Invariant"
+            )
+            params["use_areal_interpolation"] = False
+            params.setdefault("aggfunc", "sum")
+        else:
+            params, maup_axiom_pre = self._verify_and_heal_maup_pre(
+                op_norm, gdf1, gdf2, params, semantic_schema, repairs_applied
+            )
 
-        # ------------------------------------------------------------------
         # AXIOM 4: Spatial Statistical Pre-Conditions
-        # ------------------------------------------------------------------
-        gdf1, params, stat_axiom = self._verify_and_heal_statistics(
-            op_norm, gdf1, params, repairs_applied
-        )
+        if "A_STAT" in off:
+            stat_axiom = _skipped("A_STAT", "Spatial Statistical Pre-Condition & Connectivity Invariant")
+        else:
+            gdf1, params, stat_axiom = self._verify_and_heal_statistics(
+                op_norm, gdf1, params, repairs_applied
+            )
 
-        # ------------------------------------------------------------------
         # EXECUTE SPATIAL OPERATOR (With Repaired State & Parameters)
-        # ------------------------------------------------------------------
         result_obj, exec_diagnostics = self._execute_spatial_operator(
             op_norm, gdf1, gdf2, params, semantic_schema
         )
@@ -731,13 +766,15 @@ class NeuroSymbolicGeoVerifier:
         maup_axiom = self._finalize_maup_axiom(maup_axiom_pre, exec_diagnostics)
         axiom_results.append(maup_axiom)
 
-        # ------------------------------------------------------------------
         # AXIOM 3 (Post-Check): Output Manifold & Sliver Compactness Proof
-        # ------------------------------------------------------------------
-        if isinstance(result_obj, gpd.GeoDataFrame):
+        if "A_TOPO" in off:
+            topo_axiom = topo_pre
+        elif isinstance(result_obj, gpd.GeoDataFrame):
+            _saved_attrs = dict(result_obj.attrs)
             result_obj, topo_axiom = self._verify_and_heal_topology_post(
                 op_norm, result_obj, topo_pre, repairs_applied
             )
+            result_obj.attrs.update(_saved_attrs)
         else:
             topo_axiom = topo_pre
         axiom_results.append(topo_axiom)
@@ -1163,9 +1200,16 @@ class NeuroSymbolicGeoVerifier:
             areas = out.geometry.area.to_numpy(dtype=float)
             mean_area = float(np.mean(areas)) if len(areas) > 0 else 0.0
             pp_scores = np.array([polsby_popper_compactness(g) for g in out.geometry], dtype=float)
-            sliver_mask = (pp_scores < self.sliver_compactness_threshold) & (
-                areas < self.sliver_relative_area_threshold * max(mean_area, 1e-9)
-            )
+            if self.sliver_rule == "mean_width":
+                # mean width ~ 2A/P (exact for thin rectangles), converted to metres if needed
+                perims = out.geometry.length.to_numpy(dtype=float)
+                scale = 111320.0 if (out.crs is not None and out.crs.is_geographic) else 1.0
+                widths = 2.0 * areas / np.maximum(perims, 1e-12) * scale
+                sliver_mask = widths < self.sliver_min_width_m
+            else:  # "pp_relative": original v1 rule
+                sliver_mask = (pp_scores < self.sliver_compactness_threshold) & (
+                    areas < self.sliver_relative_area_threshold * max(mean_area, 1e-9)
+                )
             sliver_count = int(np.sum(sliver_mask))
         else:
             sliver_mask = np.zeros(len(out), dtype=bool)
@@ -1466,7 +1510,7 @@ class NeuroSymbolicGeoVerifier:
             int_cols = params.get("_verified_intensive_cols") or [
                 c for c, t in semantic_schema.items() if t == "intensive" and c in gdf1.columns
             ]
-            if params.get("use_areal_interpolation", True) or self.auto_heal:
+            if params.get("use_areal_interpolation", False):
                 interp_gdf, maup_diag = pycnophylactic_areal_interpolation(
                     source_gdf=gdf1,
                     target_gdf=gdf2,
@@ -1494,6 +1538,11 @@ class NeuroSymbolicGeoVerifier:
             int_cols = params.get("_verified_intensive_cols") or [
                 c for c, t in semantic_schema.items() if t == "intensive" and c in gdf1.columns and c != by_col
             ]
+            if not params.get("use_areal_interpolation", False):
+                # Unverified naive dissolve: sums every numeric column (used when A_MAUP is disabled).
+                naive_cols = ext_cols + int_cols
+                naive = gdf1.dissolve(by=by_col, aggfunc={c: "sum" for c in naive_cols}).reset_index()
+                return naive, diagnostics
             work = gdf1.copy()
             work["_poly_area"] = work.geometry.area.clip(lower=1e-9)
             for c in int_cols:
@@ -1523,21 +1572,33 @@ class NeuroSymbolicGeoVerifier:
             col = params.get("column")
             vals = gdf1[col].to_numpy(dtype=float) if col and col in gdf1.columns else np.zeros(len(gdf1))
             n = len(vals)
-            centroids = np.column_stack([gdf1.geometry.centroid.x, gdf1.geometry.centroid.y])
-            k_val = int(params.get("knn_k", min(4, max(1, n - 1))))
+            requested_w = str(params.get("weights", "knn")).lower()
 
-            # Construct row-standardized spatial weights matrix W
+            # Construct the spatial weights matrix W honoring the requested scheme.
             W = np.zeros((n, n), dtype=float)
-            for i in range(n):
-                dists = np.linalg.norm(centroids - centroids[i], axis=1)
-                dists[i] = np.inf
-                nn_idx = np.argsort(dists)[:k_val]
-                W[i, nn_idx] = 1.0 / max(len(nn_idx), 1)
+            if requested_w in {"queen", "rook", "contiguity"}:
+                sidx = gdf1.sindex
+                geoms = list(gdf1.geometry)
+                for i, g in enumerate(geoms):
+                    hits = [j for j in sidx.query(g, predicate="intersects") if j != i]
+                    if hits:
+                        W[i, hits] = 1.0 / len(hits)
+            else:
+                centroids = np.column_stack([gdf1.geometry.centroid.x, gdf1.geometry.centroid.y])
+                k_val = int(params.get("knn_k", min(4, max(1, n - 1))))
+                for i in range(n):
+                    dists = np.linalg.norm(centroids - centroids[i], axis=1)
+                    dists[i] = np.inf
+                    nn_idx = np.argsort(dists)[:k_val]
+                    W[i, nn_idx] = 1.0 / max(len(nn_idx), 1)
 
             z = vals - np.mean(vals)
             denom = float(np.sum(z**2))
             s0 = float(np.sum(W))
-            if denom > 1e-12 and s0 > 1e-12:
+            if not np.all(np.isfinite(vals)):
+                moran_i = float("nan")
+                local_i = np.full(n, np.nan)
+            elif denom > 1e-12 and s0 > 1e-12:
                 moran_i = float((n / s0) * (z @ (W @ z)) / denom)
                 local_i = (n * z / denom) * (W @ z)
             else:
@@ -1547,6 +1608,12 @@ class NeuroSymbolicGeoVerifier:
             out = gdf1.copy()
             out["local_moran_i"] = local_i
             out["global_moran_i"] = moran_i
+            # Execution facts exposed for independent verification (not used by the checker).
+            row_sums = W.sum(axis=1)
+            out.attrs["weights_scheme_used"] = requested_w
+            out.attrs["weights_row_sum_min"] = float(row_sums.min()) if n else 0.0
+            out.attrs["weights_islands"] = int(np.sum(row_sums <= 0))
+            out.attrs["predictors_used"] = list(params.get("predictors") or [])
             return out, diagnostics
 
         return gdf1.copy(), diagnostics

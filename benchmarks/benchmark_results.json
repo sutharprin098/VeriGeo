@@ -1,421 +1,551 @@
 {
-  "protocol_version": "NS-VGP/1.0.0",
   "environment": {
     "python": "3.11.9",
     "geopandas": "1.1.4",
-    "numpy": "1.26.4"
+    "shapely": "2.2.0",
+    "numpy": "1.26.4",
+    "pandas": "2.2.2"
   },
-  "total_workflows_evaluated": 60,
-  "total_runs_logged": 180,
-  "overall": {
-    "llm_geo": {
-      "total_tasks": 60,
-      "scientific_validity_pct": 0.0,
-      "crs_valid_pct": 25.0,
-      "maup_valid_pct": 75.0,
-      "topo_valid_pct": 75.0,
-      "stat_valid_pct": 75.0,
-      "mean_latency_ms": 12.95,
-      "std_latency_ms": 14.12
+  "n_tasks": {
+    "CRS": 15,
+    "MAUP": 15,
+    "TOPO": 15,
+    "STAT": 15,
+    "CONTROL": 10
+  },
+  "n_rows_logged": 535,
+  "pass_rates": {
+    "CRS": {
+      "naive": {
+        "k": 0,
+        "n": 15,
+        "pass_pct": 0.0,
+        "ci95": [
+          0.0,
+          20.388926630434785
+        ]
+      },
+      "naive_pre": {
+        "k": 0,
+        "n": 15,
+        "pass_pct": 0.0,
+        "ci95": [
+          0.0,
+          20.388926630434785
+        ]
+      },
+      "ns_vgp": {
+        "k": 15,
+        "n": 15,
+        "pass_pct": 100.0,
+        "ci95": [
+          79.6110733695652,
+          100.0
+        ]
+      },
+      "abl_no_A_CRS": {
+        "k": 0,
+        "n": 15,
+        "pass_pct": 0.0,
+        "ci95": [
+          0.0,
+          20.388926630434785
+        ]
+      },
+      "abl_no_A_MAUP": {
+        "k": 15,
+        "n": 15,
+        "pass_pct": 100.0,
+        "ci95": [
+          79.6110733695652,
+          100.0
+        ]
+      },
+      "abl_no_A_TOPO": {
+        "k": 15,
+        "n": 15,
+        "pass_pct": 100.0,
+        "ci95": [
+          79.6110733695652,
+          100.0
+        ]
+      },
+      "abl_no_A_STAT": {
+        "k": 15,
+        "n": 15,
+        "pass_pct": 100.0,
+        "ci95": [
+          79.6110733695652,
+          100.0
+        ]
+      },
+      "abl_all_off": {
+        "k": 0,
+        "n": 15,
+        "pass_pct": 0.0,
+        "ci95": [
+          0.0,
+          20.388926630434785
+        ]
+      }
     },
-    "gas_baseline": {
-      "total_tasks": 60,
-      "scientific_validity_pct": 0.0,
-      "crs_valid_pct": 25.0,
-      "maup_valid_pct": 75.0,
-      "topo_valid_pct": 75.0,
-      "stat_valid_pct": 75.0,
-      "mean_latency_ms": 3.23,
-      "std_latency_ms": 5.23
+    "MAUP": {
+      "naive": {
+        "k": 0,
+        "n": 15,
+        "pass_pct": 0.0,
+        "ci95": [
+          0.0,
+          20.388926630434785
+        ]
+      },
+      "naive_pre": {
+        "k": 0,
+        "n": 15,
+        "pass_pct": 0.0,
+        "ci95": [
+          0.0,
+          20.388926630434785
+        ]
+      },
+      "ns_vgp": {
+        "k": 15,
+        "n": 15,
+        "pass_pct": 100.0,
+        "ci95": [
+          79.6110733695652,
+          100.0
+        ]
+      },
+      "abl_no_A_CRS": {
+        "k": 15,
+        "n": 15,
+        "pass_pct": 100.0,
+        "ci95": [
+          79.6110733695652,
+          100.0
+        ]
+      },
+      "abl_no_A_MAUP": {
+        "k": 0,
+        "n": 15,
+        "pass_pct": 0.0,
+        "ci95": [
+          0.0,
+          20.388926630434785
+        ]
+      },
+      "abl_no_A_TOPO": {
+        "k": 15,
+        "n": 15,
+        "pass_pct": 100.0,
+        "ci95": [
+          79.6110733695652,
+          100.0
+        ]
+      },
+      "abl_no_A_STAT": {
+        "k": 15,
+        "n": 15,
+        "pass_pct": 100.0,
+        "ci95": [
+          79.6110733695652,
+          100.0
+        ]
+      },
+      "abl_all_off": {
+        "k": 0,
+        "n": 15,
+        "pass_pct": 0.0,
+        "ci95": [
+          0.0,
+          20.388926630434785
+        ]
+      },
+      "areaw": {
+        "k": 10,
+        "n": 10,
+        "pass_pct": 100.0,
+        "ci95": [
+          72.24598312333835,
+          100.0
+        ]
+      }
+    },
+    "TOPO": {
+      "naive": {
+        "k": 0,
+        "n": 15,
+        "pass_pct": 0.0,
+        "ci95": [
+          0.0,
+          20.388926630434785
+        ]
+      },
+      "naive_pre": {
+        "k": 0,
+        "n": 15,
+        "pass_pct": 0.0,
+        "ci95": [
+          0.0,
+          20.388926630434785
+        ]
+      },
+      "ns_vgp": {
+        "k": 15,
+        "n": 15,
+        "pass_pct": 100.0,
+        "ci95": [
+          79.6110733695652,
+          100.0
+        ]
+      },
+      "abl_no_A_CRS": {
+        "k": 15,
+        "n": 15,
+        "pass_pct": 100.0,
+        "ci95": [
+          79.6110733695652,
+          100.0
+        ]
+      },
+      "abl_no_A_MAUP": {
+        "k": 15,
+        "n": 15,
+        "pass_pct": 100.0,
+        "ci95": [
+          79.6110733695652,
+          100.0
+        ]
+      },
+      "abl_no_A_TOPO": {
+        "k": 0,
+        "n": 15,
+        "pass_pct": 0.0,
+        "ci95": [
+          0.0,
+          20.388926630434785
+        ]
+      },
+      "abl_no_A_STAT": {
+        "k": 15,
+        "n": 15,
+        "pass_pct": 100.0,
+        "ci95": [
+          79.6110733695652,
+          100.0
+        ]
+      },
+      "abl_all_off": {
+        "k": 0,
+        "n": 15,
+        "pass_pct": 0.0,
+        "ci95": [
+          0.0,
+          20.388926630434785
+        ]
+      },
+      "ns_vgp_v1": {
+        "k": 10,
+        "n": 15,
+        "pass_pct": 66.66666666666666,
+        "ci95": [
+          41.713125151212985,
+          84.82389930530874
+        ]
+      }
+    },
+    "STAT": {
+      "naive": {
+        "k": 0,
+        "n": 15,
+        "pass_pct": 0.0,
+        "ci95": [
+          0.0,
+          20.388926630434785
+        ]
+      },
+      "naive_pre": {
+        "k": 0,
+        "n": 15,
+        "pass_pct": 0.0,
+        "ci95": [
+          0.0,
+          20.388926630434785
+        ]
+      },
+      "ns_vgp": {
+        "k": 15,
+        "n": 15,
+        "pass_pct": 100.0,
+        "ci95": [
+          79.6110733695652,
+          100.0
+        ]
+      },
+      "abl_no_A_CRS": {
+        "k": 15,
+        "n": 15,
+        "pass_pct": 100.0,
+        "ci95": [
+          79.6110733695652,
+          100.0
+        ]
+      },
+      "abl_no_A_MAUP": {
+        "k": 15,
+        "n": 15,
+        "pass_pct": 100.0,
+        "ci95": [
+          79.6110733695652,
+          100.0
+        ]
+      },
+      "abl_no_A_TOPO": {
+        "k": 15,
+        "n": 15,
+        "pass_pct": 100.0,
+        "ci95": [
+          79.6110733695652,
+          100.0
+        ]
+      },
+      "abl_no_A_STAT": {
+        "k": 0,
+        "n": 15,
+        "pass_pct": 0.0,
+        "ci95": [
+          0.0,
+          20.388926630434785
+        ]
+      },
+      "abl_all_off": {
+        "k": 0,
+        "n": 15,
+        "pass_pct": 0.0,
+        "ci95": [
+          0.0,
+          20.388926630434785
+        ]
+      }
+    },
+    "CONTROL": {
+      "naive": {
+        "k": 10,
+        "n": 10,
+        "pass_pct": 100.0,
+        "ci95": [
+          72.24598312333835,
+          100.0
+        ]
+      },
+      "naive_pre": {
+        "k": 10,
+        "n": 10,
+        "pass_pct": 100.0,
+        "ci95": [
+          72.24598312333835,
+          100.0
+        ]
+      },
+      "ns_vgp": {
+        "k": 10,
+        "n": 10,
+        "pass_pct": 100.0,
+        "ci95": [
+          72.24598312333835,
+          100.0
+        ]
+      }
+    },
+    "ALL": {
+      "naive": {
+        "k": 10,
+        "n": 70,
+        "pass_pct": 14.285714285714285,
+        "ci95": [
+          7.948856360443703,
+          24.338634701505114
+        ]
+      },
+      "naive_pre": {
+        "k": 10,
+        "n": 70,
+        "pass_pct": 14.285714285714285,
+        "ci95": [
+          7.948856360443703,
+          24.338634701505114
+        ]
+      },
+      "ns_vgp": {
+        "k": 70,
+        "n": 70,
+        "pass_pct": 100.0,
+        "ci95": [
+          94.79751251327164,
+          99.99999999999997
+        ]
+      },
+      "abl_no_A_CRS": {
+        "k": 45,
+        "n": 60,
+        "pass_pct": 75.0,
+        "ci95": [
+          62.767689054515195,
+          84.22361442158815
+        ]
+      },
+      "abl_no_A_MAUP": {
+        "k": 45,
+        "n": 60,
+        "pass_pct": 75.0,
+        "ci95": [
+          62.767689054515195,
+          84.22361442158815
+        ]
+      },
+      "abl_no_A_TOPO": {
+        "k": 45,
+        "n": 60,
+        "pass_pct": 75.0,
+        "ci95": [
+          62.767689054515195,
+          84.22361442158815
+        ]
+      },
+      "abl_no_A_STAT": {
+        "k": 45,
+        "n": 60,
+        "pass_pct": 75.0,
+        "ci95": [
+          62.767689054515195,
+          84.22361442158815
+        ]
+      },
+      "abl_all_off": {
+        "k": 0,
+        "n": 60,
+        "pass_pct": 0.0,
+        "ci95": [
+          0.0,
+          6.0173930477932895
+        ]
+      },
+      "areaw": {
+        "k": 10,
+        "n": 10,
+        "pass_pct": 100.0,
+        "ci95": [
+          72.24598312333835,
+          100.0
+        ]
+      },
+      "ns_vgp_v1": {
+        "k": 10,
+        "n": 15,
+        "pass_pct": 66.66666666666666,
+        "ci95": [
+          41.713125151212985,
+          84.82389930530874
+        ]
+      }
+    }
+  },
+  "error_metrics": {
+    "naive": {
+      "crs_area_err_median": 26.87295196078446,
+      "crs_area_err_mean": 35.000511083070435,
+      "maup_pop_total_err_mean": 166.05102335117576,
+      "maup_pop_zone_nmae_mean": 166.05102335117576,
+      "maup_income_ratio_mean": 4.001064901223293,
+      "maup_income_err_mean": 300.1064901223294,
+      "maup_income_mape_mean": 305.65240706281236
     },
     "ns_vgp": {
-      "total_tasks": 60,
-      "scientific_validity_pct": 100.0,
-      "crs_valid_pct": 100.0,
-      "maup_valid_pct": 100.0,
-      "topo_valid_pct": 100.0,
-      "stat_valid_pct": 100.0,
-      "mean_latency_ms": 67.32,
-      "std_latency_ms": 82.29
+      "crs_area_err_median": 0.014799513061556857,
+      "crs_area_err_mean": 0.023091717898096952,
+      "maup_pop_total_err_mean": 1.9292969570661113e-15,
+      "maup_pop_zone_nmae_mean": 3.618873589010748,
+      "maup_income_ratio_mean": 1.0006942824847411,
+      "maup_income_err_mean": 0.18432670989651623,
+      "maup_income_mape_mean": 0.9276268352560187
+    },
+    "areaw": {
+      "maup_pop_total_err_mean": 0.0003117616987353174,
+      "maup_pop_zone_nmae_mean": 7.9242802528241825,
+      "maup_income_mape_mean": 0.9276268352560187
     }
   },
-  "by_category": {
-    "Metric & Geodesic CRS": {
-      "llm_geo": {
-        "num_tasks": 15,
-        "scientific_validity_pct": 0.0,
-        "crs_valid_pct": 0.0,
-        "maup_valid_pct": 100.0,
-        "topo_valid_pct": 100.0,
-        "stat_valid_pct": 100.0,
-        "mean_area_error_pct": 53.25,
-        "mean_mass_error_pct": 0.0,
-        "mean_intensive_inflation": 1.0,
-        "mean_latency_ms": 0.68,
-        "std_latency_ms": 0.34
-      },
-      "gas_baseline": {
-        "num_tasks": 15,
-        "scientific_validity_pct": 0.0,
-        "crs_valid_pct": 0.0,
-        "maup_valid_pct": 100.0,
-        "topo_valid_pct": 100.0,
-        "stat_valid_pct": 100.0,
-        "mean_area_error_pct": 48.25,
-        "mean_mass_error_pct": 0.0,
-        "mean_intensive_inflation": 1.0,
-        "mean_latency_ms": 0.21,
-        "std_latency_ms": 0.09
-      },
-      "ns_vgp": {
-        "num_tasks": 15,
-        "scientific_validity_pct": 100.0,
-        "crs_valid_pct": 100.0,
-        "maup_valid_pct": 100.0,
-        "topo_valid_pct": 100.0,
-        "stat_valid_pct": 100.0,
-        "mean_area_error_pct": 0.0,
-        "mean_mass_error_pct": 0.0,
-        "mean_intensive_inflation": 1.0,
-        "mean_latency_ms": 24.25,
-        "std_latency_ms": 17.99
-      }
+  "control_check": {
+    "max_rel_diff_ns_vs_naive": 0.0,
+    "ns_repairs_total": 0
+  },
+  "topology": {
+    "naive": {
+      "crashes": 0,
+      "mean_slivers": 2.0,
+      "mean_invalid": 0.0,
+      "mean_legit_area_retained_pct": 100.0
     },
-    "MAUP & Areal Interpolation": {
-      "llm_geo": {
-        "num_tasks": 15,
-        "scientific_validity_pct": 0.0,
-        "crs_valid_pct": 0.0,
-        "maup_valid_pct": 0.0,
-        "topo_valid_pct": 100.0,
-        "stat_valid_pct": 100.0,
-        "mean_area_error_pct": 0.0,
-        "mean_mass_error_pct": 86.914,
-        "mean_intensive_inflation": 4.0,
-        "mean_latency_ms": 21.48,
-        "std_latency_ms": 11.24
-      },
-      "gas_baseline": {
-        "num_tasks": 15,
-        "scientific_validity_pct": 0.0,
-        "crs_valid_pct": 0.0,
-        "maup_valid_pct": 0.0,
-        "topo_valid_pct": 100.0,
-        "stat_valid_pct": 100.0,
-        "mean_area_error_pct": 0.0,
-        "mean_mass_error_pct": 86.914,
-        "mean_intensive_inflation": 4.0,
-        "mean_latency_ms": 12.22,
-        "std_latency_ms": 1.34
-      },
-      "ns_vgp": {
-        "num_tasks": 15,
-        "scientific_validity_pct": 100.0,
-        "crs_valid_pct": 100.0,
-        "maup_valid_pct": 100.0,
-        "topo_valid_pct": 100.0,
-        "stat_valid_pct": 100.0,
-        "mean_area_error_pct": 0.0,
-        "mean_mass_error_pct": 0.0,
-        "mean_intensive_inflation": 1.0,
-        "mean_latency_ms": 174.99,
-        "std_latency_ms": 103.26
-      }
+    "naive_pre": {
+      "crashes": 0,
+      "mean_slivers": 2.0,
+      "mean_invalid": 0.0,
+      "mean_legit_area_retained_pct": 100.0
     },
-    "Topological Manifold & Slivers": {
-      "llm_geo": {
-        "num_tasks": 15,
-        "scientific_validity_pct": 0.0,
-        "crs_valid_pct": 100.0,
-        "maup_valid_pct": 100.0,
-        "topo_valid_pct": 0.0,
-        "stat_valid_pct": 100.0,
-        "mean_area_error_pct": 0.0,
-        "mean_mass_error_pct": 0.0,
-        "mean_intensive_inflation": 1.0,
-        "mean_latency_ms": 29.47,
-        "std_latency_ms": 3.39
-      },
-      "gas_baseline": {
-        "num_tasks": 15,
-        "scientific_validity_pct": 0.0,
-        "crs_valid_pct": 100.0,
-        "maup_valid_pct": 100.0,
-        "topo_valid_pct": 0.0,
-        "stat_valid_pct": 100.0,
-        "mean_area_error_pct": 0.0,
-        "mean_mass_error_pct": 0.0,
-        "mean_intensive_inflation": 1.0,
-        "mean_latency_ms": 0.29,
-        "std_latency_ms": 0.04
-      },
-      "ns_vgp": {
-        "num_tasks": 15,
-        "scientific_validity_pct": 100.0,
-        "crs_valid_pct": 100.0,
-        "maup_valid_pct": 100.0,
-        "topo_valid_pct": 100.0,
-        "stat_valid_pct": 100.0,
-        "mean_area_error_pct": 0.0,
-        "mean_mass_error_pct": 0.0,
-        "mean_intensive_inflation": 1.0,
-        "mean_latency_ms": 51.0,
-        "std_latency_ms": 7.29
-      }
+    "ns_vgp_v1": {
+      "crashes": 0,
+      "mean_slivers": 0.4666666666666667,
+      "mean_invalid": 0.0,
+      "mean_legit_area_retained_pct": 100.0
     },
-    "Spatial Statistical Pre-Conditions": {
-      "llm_geo": {
-        "num_tasks": 15,
-        "scientific_validity_pct": 0.0,
-        "crs_valid_pct": 0.0,
-        "maup_valid_pct": 100.0,
-        "topo_valid_pct": 100.0,
-        "stat_valid_pct": 0.0,
-        "mean_area_error_pct": 0.0,
-        "mean_mass_error_pct": 0.0,
-        "mean_intensive_inflation": 1.0,
-        "mean_latency_ms": 0.16,
-        "std_latency_ms": 0.02
-      },
-      "gas_baseline": {
-        "num_tasks": 15,
-        "scientific_validity_pct": 0.0,
-        "crs_valid_pct": 0.0,
-        "maup_valid_pct": 100.0,
-        "topo_valid_pct": 100.0,
-        "stat_valid_pct": 0.0,
-        "mean_area_error_pct": 0.0,
-        "mean_mass_error_pct": 0.0,
-        "mean_intensive_inflation": 1.0,
-        "mean_latency_ms": 0.19,
-        "std_latency_ms": 0.06
-      },
-      "ns_vgp": {
-        "num_tasks": 15,
-        "scientific_validity_pct": 100.0,
-        "crs_valid_pct": 100.0,
-        "maup_valid_pct": 100.0,
-        "topo_valid_pct": 100.0,
-        "stat_valid_pct": 100.0,
-        "mean_area_error_pct": 0.0,
-        "mean_mass_error_pct": 0.0,
-        "mean_intensive_inflation": 1.0,
-        "mean_latency_ms": 19.04,
-        "std_latency_ms": 1.83
-      }
+    "ns_vgp": {
+      "crashes": 0,
+      "mean_slivers": 0.0,
+      "mean_invalid": 0.0,
+      "mean_legit_area_retained_pct": 100.0
     }
   },
-  "ablation": {
-    "full_ns_vgp": 100.0,
-    "no_A_CRS": 25.0,
-    "no_A_MAUP": 75.0,
-    "no_A_TOPO": 75.0,
-    "no_A_STAT": 75.0
-  },
-  "sample_per_task_traces": [
-    {
-      "task_id": "CRS-01",
-      "category": "Metric & Geodesic CRS",
-      "operator": "clip_and_area",
-      "mode": "ns_vgp",
-      "scientifically_valid": true,
-      "crs_valid": true,
-      "maup_valid": true,
-      "topo_valid": true,
-      "stat_valid": true,
-      "area_error_pct": 0.0,
-      "mass_error_pct": 0.0,
-      "intensive_inflation": 1.0,
-      "latency_ms": 45.934,
-      "certificate_id": "SPC-D789FCF50DC0",
-      "validation_notes": "[A_CRS] Reprojected layers from (EPSG:4326, EPSG:3857) to metric CRS EPSG:32611 (Conformal UTM)."
+  "latency_ms": {
+    "CRS": {
+      "mean": 33.341900000111,
+      "std": 25.812221722879862
     },
-    {
-      "task_id": "CRS-06",
-      "category": "Metric & Geodesic CRS",
-      "operator": "area",
-      "mode": "ns_vgp",
-      "scientifically_valid": true,
-      "crs_valid": true,
-      "maup_valid": true,
-      "topo_valid": true,
-      "stat_valid": true,
-      "area_error_pct": 0.0,
-      "mass_error_pct": 0.0,
-      "intensive_inflation": 1.0,
-      "latency_ms": 81.472,
-      "certificate_id": "SPC-14882EF45229",
-      "validation_notes": "[A_CRS] Reprojected layers from (EPSG:4326, EPSG:4326) to metric CRS EPSG:5070 (Equal-Area)."
+    "MAUP": {
+      "mean": 189.4558200000271,
+      "std": 104.72468665792005
     },
-    {
-      "task_id": "CRS-11",
-      "category": "Metric & Geodesic CRS",
-      "operator": "buffer",
-      "mode": "ns_vgp",
-      "scientifically_valid": true,
-      "crs_valid": true,
-      "maup_valid": true,
-      "topo_valid": true,
-      "stat_valid": true,
-      "area_error_pct": 0.0,
-      "mass_error_pct": 0.0,
-      "intensive_inflation": 1.0,
-      "latency_ms": 13.091,
-      "certificate_id": "SPC-05965DE6BCDA",
-      "validation_notes": "[A_CRS] Reprojected layers from (EPSG:4326, EPSG:4326) to metric CRS EPSG:32623 (Conformal UTM)."
+    "TOPO": {
+      "mean": 66.12982666653504,
+      "std": 11.890311904960512
     },
-    {
-      "task_id": "MAUP-01",
-      "category": "MAUP & Areal Interpolation",
-      "operator": "spatial_join",
-      "mode": "ns_vgp",
-      "scientifically_valid": true,
-      "crs_valid": true,
-      "maup_valid": true,
-      "topo_valid": true,
-      "stat_valid": true,
-      "area_error_pct": 0.0,
-      "mass_error_pct": 0.0,
-      "intensive_inflation": 1.0,
-      "latency_ms": 213.923,
-      "certificate_id": "SPC-534A31C1152B",
-      "validation_notes": "[A_CRS] Reprojected layers from (EPSG:4326, EPSG:4326) to metric CRS EPSG:5070 (Equal-Area).; [A_MAUP] Blocked illegal aggregation (sum); enforced Tobler Pycnophylactic Mass-Preserving Interpolation for extensive ['population', 'households'] and Area-Weighted Integral Average for intensive ['pop_density', 'median_income', 'pm25', 'ndvi']."
+    "STAT": {
+      "mean": 20.120093333268112,
+      "std": 4.502430684971505
     },
-    {
-      "task_id": "MAUP-06",
-      "category": "MAUP & Areal Interpolation",
-      "operator": "dissolve",
-      "mode": "ns_vgp",
-      "scientifically_valid": true,
-      "crs_valid": true,
-      "maup_valid": true,
-      "topo_valid": true,
-      "stat_valid": true,
-      "area_error_pct": 0.0,
-      "mass_error_pct": 0.0,
-      "intensive_inflation": 1.0,
-      "latency_ms": 38.85,
-      "certificate_id": "SPC-048B80359780",
-      "validation_notes": "[A_CRS] Reprojected layers from (EPSG:4326, EPSG:4326) to metric CRS EPSG:5070 (Equal-Area).; [A_MAUP] Blocked illegal aggregation (sum); enforced Tobler Pycnophylactic Mass-Preserving Interpolation for extensive ['population', 'households'] and Area-Weighted Integral Average for intensive ['pop_density', 'median_income', 'pm25', 'ndvi']."
-    },
-    {
-      "task_id": "MAUP-11",
-      "category": "MAUP & Areal Interpolation",
-      "operator": "spatial_join",
-      "mode": "ns_vgp",
-      "scientifically_valid": true,
-      "crs_valid": true,
-      "maup_valid": true,
-      "topo_valid": true,
-      "stat_valid": true,
-      "area_error_pct": 0.0,
-      "mass_error_pct": 0.0,
-      "intensive_inflation": 1.0,
-      "latency_ms": 282.83,
-      "certificate_id": "SPC-5CB7A2781576",
-      "validation_notes": "[A_CRS] Reprojected layers from (EPSG:4326, EPSG:4326) to metric CRS EPSG:5070 (Equal-Area).; [A_MAUP] Blocked illegal aggregation (sum); enforced Tobler Pycnophylactic Mass-Preserving Interpolation for extensive ['population', 'households'] and Area-Weighted Integral Average for intensive ['pop_density', 'median_income', 'pm25', 'ndvi']."
-    },
-    {
-      "task_id": "TOPO-01",
-      "category": "Topological Manifold & Slivers",
-      "operator": "intersection",
-      "mode": "ns_vgp",
-      "scientifically_valid": true,
-      "crs_valid": true,
-      "maup_valid": true,
-      "topo_valid": true,
-      "stat_valid": true,
-      "area_error_pct": 0.0,
-      "mass_error_pct": 0.0,
-      "intensive_inflation": 1.0,
-      "latency_ms": 49.27,
-      "certificate_id": "SPC-8598E46CE735",
-      "validation_notes": "[A_TOPO:PRE] Applied constructive manifold repair (ST_MakeValid) to 1 input geometries.; [A_CRS] Reprojected layers from (EPSG:4326, EPSG:4326) to metric CRS EPSG:32618 (Conformal UTM).; [A_TOPO:POST] Pruned 1 slivers & healed 0 geometries."
-    },
-    {
-      "task_id": "TOPO-06",
-      "category": "Topological Manifold & Slivers",
-      "operator": "intersection",
-      "mode": "ns_vgp",
-      "scientifically_valid": true,
-      "crs_valid": true,
-      "maup_valid": true,
-      "topo_valid": true,
-      "stat_valid": true,
-      "area_error_pct": 0.0,
-      "mass_error_pct": 0.0,
-      "intensive_inflation": 1.0,
-      "latency_ms": 62.937,
-      "certificate_id": "SPC-87CC45C1EB59",
-      "validation_notes": "[A_TOPO:PRE] Applied constructive manifold repair (ST_MakeValid) to 1 input geometries.; [A_CRS] Reprojected layers from (EPSG:4326, EPSG:4326) to metric CRS EPSG:32618 (Conformal UTM).; [A_TOPO:POST] Pruned 1 slivers & healed 0 geometries."
-    },
-    {
-      "task_id": "TOPO-11",
-      "category": "Topological Manifold & Slivers",
-      "operator": "intersection",
-      "mode": "ns_vgp",
-      "scientifically_valid": true,
-      "crs_valid": true,
-      "maup_valid": true,
-      "topo_valid": true,
-      "stat_valid": true,
-      "area_error_pct": 0.0,
-      "mass_error_pct": 0.0,
-      "intensive_inflation": 1.0,
-      "latency_ms": 43.485,
-      "certificate_id": "SPC-BD23FC61D978",
-      "validation_notes": "[A_TOPO:PRE] Applied constructive manifold repair (ST_MakeValid) to 1 input geometries.; [A_CRS] Reprojected layers from (EPSG:4326, EPSG:4326) to metric CRS EPSG:32618 (Conformal UTM).; [A_TOPO:POST] Pruned 1 slivers & healed 0 geometries."
-    },
-    {
-      "task_id": "STAT-01",
-      "category": "Spatial Statistical Pre-Conditions",
-      "operator": "gwr",
-      "mode": "ns_vgp",
-      "scientifically_valid": true,
-      "crs_valid": true,
-      "maup_valid": true,
-      "topo_valid": true,
-      "stat_valid": true,
-      "area_error_pct": 0.0,
-      "mass_error_pct": 0.0,
-      "intensive_inflation": 1.0,
-      "latency_ms": 19.351,
-      "certificate_id": "SPC-104F4F4E330C",
-      "validation_notes": "[A_CRS] Reprojected layers from (EPSG:4326, EPSG:4326) to metric CRS EPSG:32618 (Conformal UTM).; [A_STAT] Imputed 1 missing value(s) in 'disease_rate' with spatial median (52.422). Switched gwr from normal approximation to exact conditional Monte Carlo permutation (999 permutations). Pruned collinear predictor 'x1' (kappa=120146.1) and enabled L2 ridge regularization."
-    },
-    {
-      "task_id": "STAT-06",
-      "category": "Spatial Statistical Pre-Conditions",
-      "operator": "morans_i",
-      "mode": "ns_vgp",
-      "scientifically_valid": true,
-      "crs_valid": true,
-      "maup_valid": true,
-      "topo_valid": true,
-      "stat_valid": true,
-      "area_error_pct": 0.0,
-      "mass_error_pct": 0.0,
-      "intensive_inflation": 1.0,
-      "latency_ms": 18.445,
-      "certificate_id": "SPC-5C352FD41F5A",
-      "validation_notes": "[A_CRS] Reprojected layers from (EPSG:4326, EPSG:4326) to metric CRS EPSG:32618 (Conformal UTM).; [A_STAT] Imputed 1 missing value(s) in 'disease_rate' with spatial median (60.467). Switched morans_i from normal approximation to exact conditional Monte Carlo permutation (999 permutations)."
-    },
-    {
-      "task_id": "STAT-11",
-      "category": "Spatial Statistical Pre-Conditions",
-      "operator": "lisa",
-      "mode": "ns_vgp",
-      "scientifically_valid": true,
-      "crs_valid": true,
-      "maup_valid": true,
-      "topo_valid": true,
-      "stat_valid": true,
-      "area_error_pct": 0.0,
-      "mass_error_pct": 0.0,
-      "intensive_inflation": 1.0,
-      "latency_ms": 18.886,
-      "certificate_id": "SPC-83CE38F6885B",
-      "validation_notes": "[A_CRS] Reprojected layers from (EPSG:4326, EPSG:4326) to metric CRS EPSG:32618 (Conformal UTM).; [A_STAT] Imputed 1 missing value(s) in 'disease_rate' with spatial median (48.652). Switched lisa from normal approximation to exact conditional Monte Carlo permutation (999 permutations)."
+    "CONTROL": {
+      "mean": 13.550929999837535,
+      "std": 3.8515962374014134
     }
-  ]
+  },
+  "mean_latency_by_method_ms": {
+    "naive": 70.56422285713779,
+    "naive_pre": 59.97252000006483,
+    "ns_vgp": 68.16034142853563
+  },
+  "case_study": {
+    "task": "MAUP-01",
+    "true_total_pop": 37315.0,
+    "naive_total_pop": 105618.0,
+    "verigeo_total_pop": 37315.0,
+    "areaw_total_pop": 37314.868551922475,
+    "true_mean_income": 84899.82621148959,
+    "naive_mean_income": 339820.1407481385,
+    "verigeo_mean_income": 84937.5075513751,
+    "zone_nmae_pct": {
+      "naive": 183.04435213721024,
+      "areaw": 10.625077522170532,
+      "verigeo": 3.156503076164236
+    }
+  }
 }

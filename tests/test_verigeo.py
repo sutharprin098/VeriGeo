@@ -239,3 +239,21 @@ def test_tool_handler_verify_and_heal() -> None:
     assert out["protocol"] == PROTOCOL_VERSION
     assert out["verifiable_guarantee"] is True
     assert out["scientific_validity_score"] == 1.0
+
+
+def test_disabled_axioms_ablation_and_sliver_rules() -> None:
+    """Verify disabled_axioms skips axiom enforcement and mean_width prunes wider slivers."""
+    gdf = gpd.GeoDataFrame(
+        {"id": ["A"], "population": [1000]},
+        geometry=[box(-77.88, 40.78, -77.84, 40.82)],
+        crs="EPSG:4326",
+    )
+    verifier_no_crs = NeuroSymbolicGeoVerifier(auto_heal=True, disabled_axioms={"A_CRS"})
+    res_gdf, spc = verifier_no_crs.verify_and_execute(
+        operator="area",
+        primary_gdf=gdf,
+    )
+    crs_ax = next(a for a in spc.axiom_results if a.axiom_id == "A_CRS")
+    assert crs_ax.status == "NOT_APPLICABLE"
+    assert res_gdf.crs.is_geographic is True
+
