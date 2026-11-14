@@ -3,7 +3,7 @@
 <p align="left">
   <img src="https://img.shields.io/badge/Protocol-NS--VGP%2F1.0.0-10b981?style=flat-square" alt="Protocol NS-VGP 1.0.0">
   <img src="https://img.shields.io/badge/Python-3.10%2B-2563eb?style=flat-square" alt="Python 3.10+">
-  <img src="https://img.shields.io/badge/Verified_Pass_Rate-66%2F70_(94.3%25)-059669?style=flat-square" alt="66/70 (94.3%) Verified Pass Rate">
+  <img src="https://img.shields.io/badge/Benchmark_Pass_Rate-67%2F70_(95.7%25)-059669?style=flat-square" alt="67/70 (95.7%) benchmark pass rate">
   <img src="https://img.shields.io/badge/License-MIT-f59e0b?style=flat-square" alt="License MIT">
 </p>
 
@@ -16,7 +16,7 @@ Libraries like GeoPandas and Shapely allow invalid cartographic, aggregation, to
 3. **Invalid Rings & Overlay Slivers (Topology):** Leaving self-intersecting "bowtie" rings and paper-thin boundary slivers (`Mean Width = 2 * Area / Perimeter < 1.0 m`) in polygon overlay outputs.
 4. **Violated Spatial Statistics Assumptions:** Running Moran's $I$, LISA, Getis-Ord $G_i^*$, or GWR on missing values (`NaN`), isolated island polygons with zero touching neighbors under Queen contiguity, small sample sizes ($N < 30$), or redundant collinear predictors (condition number $\kappa > 30$).
 
-**VeriGeo** checks and repairs these four conditions before and after each spatial operation and saves a JSON **Spatial Proof Certificate (`SPC`)** with a SHA-256 hash of the input and output layers.
+**VeriGeo** checks selected spatial preconditions and saves a JSON **Spatial Verification Record (`SPC`)**. Its SHA-256 digest covers audit metadata (operator, parameters, checks, repairs, and guarantee flag), not the complete input/output geometries or attributes; it is not a digital signature or proof of scientific correctness.
 
 ---
 
@@ -28,14 +28,14 @@ Libraries like GeoPandas and Shapely allow invalid cartographic, aggregation, to
 | :--- | :--- | :--- |
 | **Rule 1: Map Projections & CRS** | Metric operations (`buffer`, `area`, `spatial_join`, `dissolve`, `intersection`) must use projected coordinates (meters/feet) and matching CRS across layers. | Reprojects geographic (`EPSG:4326`) or mismatched layers to **Equal-Area** (`EPSG:5070` CONUS, `EPSG:3035` Europe, `EPSG:6933` global) for area/aggregation operations or **local UTM** (`EPSG:326xx`/`327xx`) for distance/buffer operations. |
 | **Rule 2: Counts vs. Ratios (MAUP)** | Ratio columns (`median_income`, `pop_density`, `rate`, `pct`, `ndvi`, `pm25`) must never be summed (`SUM`), and count columns (`population`, `households`, `crimes`) must conserve total count across zone transfers. | Classifies columns into counts, ratios, and identifiers; runs **Tobler's smooth pycnophylactic interpolation** ($40 \times 40$ grid, 35 smoothing passes with exact tract rescaling) for counts and **area-weighted averaging** for ratios. |
-| **Rule 3: Polygon Topology & Slivers** | All input and output polygons must be valid OGC geometries (`is_valid == True`), and overlay outputs must contain no narrow boundary slivers (`2 * Area / Perimeter < 1.0 m`). | Repairs self-intersecting bowtie rings via `shapely.validation.make_valid()` before execution and removes overlay slivers narrower than `1.0 m` in projected meters. |
+| **Rule 3: Geometry Validity & Overlay Slivers** | Inputs and outputs must pass Shapely validity checks; overlay outputs are also tested for thin, elongated fragments. | Repairs invalid geometries with `make_valid()` and removes fragments only when equivalent width is `< 1.0 m` and Polsby-Popper compactness is `< 0.25`. A legitimate `0.80 m` canal is still removed in `TOPO-15`. |
 | **Rule 4: Spatial Statistics Pre-Checks** | Target variable must contain no `NaN`/infinite values and non-zero variance; spatial weight matrix must have zero disconnected islands; GWR predictors must have condition number $\kappa < 30$. | Fills `NaN` values with the median, replaces disconnected Queen/Rook contiguity graphs with row-standardized metric $k$-NN weights, uses `999` permutations when $N < 30$, and drops collinear predictors. |
 
 ---
 
 ## Benchmark Results ($N=70$ Tasks, $535$ Logged Runs)
 
-Every baseline (`naive`, `naive_pre`, `areaw`), single-rule ablation, and `ns_vgp` run in [`benchmarks/run_experiments.py`](benchmarks/run_experiments.py) runs real GeoPandas, Shapely, and PyProj operations and is scored by an **independent ground-truth evaluator**:
+Every baseline (`naive`, `naive_pre`, `areaw`), single-rule ablation, and `ns_vgp` run in [`benchmarks/run_experiments.py`](benchmarks/run_experiments.py) executes GeoPandas/Shapely/PyProj code. The evaluator uses external geodesic/point truth for CRS and MAUP; topology and statistics checks use criteria closely aligned with the implementation. Do not interpret all categories as independent model-level validation:
 
 - **CRS Truth (`CRS-01..15`):** Exact WGS84 ellipsoidal geodesic area (`pyproj.Geod(ellps="WGS84").geometry_area_perimeter`) and local Azimuthal Equidistant (`+proj=aeqd`) buffers and clips.
 - **MAUP Truth (`MAUP-01..15`):** `40,000` synthetic resident points (`70%` Gaussian hotspots + `30%` background) aggregated into both the $4 \times 4$ source census tracts and the $3 \times 3$ target zones / $4$ dissolved districts.
@@ -47,34 +47,34 @@ Every baseline (`naive`, `naive_pre`, `areaw`), single-rule ablation, and `ns_vg
 
 | Task Category | Method | Passed ($k/N$) | Pass Rate (%) [95% Wilson CI] | Mean Area Error (%) | Total Pop Error (%) | Zone Pop NMAE (%) / Slivers | Income Ratio ($\times$) / $\kappa$ | Mean Latency ($\text{ms} \pm \text{SD}$) |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **1. CRS Distortion** ($N=15$) | `naive` | `0/15` | `0.0%` `[0.0, 20.4]` | `35.00%` (med `26.87%`) | — | — | — | `34.16 ± 98.41` |
-| | `naive_pre` | `0/15` | `0.0%` `[0.0, 20.4]` | `35.00%` (med `26.87%`) | — | — | — | `9.29 ± 5.24` |
-| | **VeriGeo (`ns_vgp`)** | **`15/15`** | **`100.0%` `[79.6, 100.0]`** | **`0.024%` (med `0.015%`)** | — | — | — | **`22.07 ± 12.15`** |
-| **2. MAUP Aggregation** ($N=15$) | `naive` | `0/15` | `0.0%` `[0.0, 20.4]` | — | `169.56%` (joins) | `169.56%` (`166.37%` 9-join) | `3.987x` | `18.21 ± 10.12` |
-| | `naive_pre` | `0/15` | `0.0%` `[0.0, 20.4]` | — | `169.56%` (joins) | `169.56%` (`166.37%` 9-join) | `3.987x` | `15.10 ± 6.42` |
-| | `areaw` ($N=10$ joins) | `9/10` | `90.0%` `[59.6, 98.2]` | — | `0.0000%` | `12.80%` (`7.97%` 9-join) | `0.998x` | `51.40 ± 19.85` |
-| | **VeriGeo (`ns_vgp`)** | **`13/15`** | **`86.7%` `[62.1, 96.3]`** | — | **`0.0000%` (`1.9e-15%`)** | **`10.10%` (`3.84%` 9-join)** | **`0.998x` (`1.009x` 14-std)** | **`129.74 ± 60.61`** |
-| **3. Topology & Slivers** ($N=15$) | `naive` | `0/15` | `0.0%` `[0.0, 20.4]` | — | — | `1.87` slivers | — | `142.33 ± 26.82` |
-| | `naive_pre` | `0/15` | `0.0%` `[0.0, 20.4]` | — | — | `1.87` slivers | — | `134.97 ± 22.90` |
-| | `ns_vgp_v1` (`pp_relative`) | `10/15` | `66.7%` `[41.7, 84.8]` | — | — | `0.40` slivers | — | `46.50 ± 7.62` |
-| | **VeriGeo (`ns_vgp`)** | **`14/15`** | **`93.3%` `[70.2, 98.8]`** | — | — | **`0.00` slivers (`TOPO-15` canal)** | — | **`42.73 ± 4.65`** |
-| **4. Spatial Statistics** ($N=15$) | `naive` | `0/15` | `0.0%` `[0.0, 20.4]` | — | — | `2` islands, `NaN` | `κ ≤ 164,308` | `6.14 ± 2.83` |
-| | `naive_pre` | `0/15` | `0.0%` `[0.0, 20.4]` | — | — | `2` islands | `κ ≤ 164,308` | `6.66 ± 1.66` |
-| | **VeriGeo (`ns_vgp`)** | **`14/15`** | **`93.3%` `[70.2, 98.8]`** | — | — | **`0` islands** | **`κ = 1.00` (`STAT-13` `κ = 66k`)** | **`13.09 ± 3.16`** |
-| **5. Clean Control** ($N=10$) | `naive` | `10/10` | `100.0%` `[72.2, 100.0]` | `0.030%` | — | `0` repairs | — | `3.50 ± 3.24` |
-| | `naive_pre` | `10/10` | `100.0%` `[72.2, 100.0]` | `0.030%` | — | `0` repairs | — | `3.46 ± 3.40` |
-| | **VeriGeo (`ns_vgp`)** | **`10/10`** | **`100.0%` `[72.2, 100.0]`** | **`0.030%`** | — | **`0` repairs** | — | **`8.20 ± 1.98`** |
-| **All Tasks ($N=70$)** | `naive` | `10/70` | `14.3%` `[7.9, 24.3]` | `35.00%` | `169.56%` | `169.56%` | `3.987x` | `43.02` |
-| | `naive_pre` | `10/70` | `14.3%` `[7.9, 24.3]` | `35.00%` | `169.56%` | `169.56%` | `3.987x` | `35.51` |
-| | **VeriGeo (`ns_vgp`)** | **`66/70`** | **`94.3%` `[86.2, 97.8]`** | **`0.024%`** | **`0.0000%`** | **`3.62%` (`10.10%` all)** | **`1.001x`** | **`44.35`** |
+| **1. CRS Distortion** ($N=15$) | `naive` | `0/15` | `0.0%` `[0.0, 20.4]` | `35.00%` (med `26.87%`) | — | — | — | `23.46 ± 69.92` |
+| | `naive_pre` | `0/15` | `0.0%` `[0.0, 20.4]` | `35.00%` (med `26.87%`) | — | — | — | `4.68 ± 1.81` |
+| | **VeriGeo (`ns_vgp`)** | **`15/15`** | **`100.0%` `[79.6, 100.0]`** | **`0.024%` (med `0.015%`)** | — | — | — | **`11.61 ± 8.54`** |
+| **2. MAUP Aggregation** ($N=15$) | `naive` | `0/15` | `0.0%` `[0.0, 20.4]` | — | `169.56%` (joins) | `169.56%` (10 joins; `166.37%` 9-join) | `3.987x` | `7.34 ± 1.06` |
+| | `naive_pre` | `0/15` | `0.0%` `[0.0, 20.4]` | — | `169.56%` (joins) | `169.56%` (10 joins; `166.37%` 9-join) | `3.987x` | `6.67 ± 1.19` |
+| | `areaw` ($N=10$ joins) | `9/10` | `90.0%` `[59.6, 98.2]` | — | `0.0000%` | `12.80%` (`7.97%` 9-join) | `0.998x` | `24.29 ± 2.46` |
+| | **VeriGeo (`ns_vgp`)** | **`13/15`** | **`86.7%` `[62.1, 96.3]`** | — | **`0.0000%`** | **`10.10%` (`3.84%` 9-join)** | **`0.998x` (`1.009x` 14-std)** | **`66.82 ± 32.54`** |
+| **3. Topology & Slivers** ($N=15$) | `naive` | `0/15` | `0.0%` `[0.0, 20.4]` | — | — | `1.87` slivers | — | `112.49 ± 9.76` |
+| | `naive_pre` | `0/15` | `0.0%` `[0.0, 20.4]` | — | — | `1.87` slivers | — | `109.69 ± 14.03` |
+| | `ns_vgp_v1` (`pp_relative`) | `10/15` | `66.7%` `[41.7, 84.8]` | — | — | `0.40` slivers | — | `27.77 ± 5.28` |
+| | **VeriGeo (`ns_vgp`)** | **`14/15`** | **`93.3%` `[70.2, 98.8]`** | — | — | **`0.00` slivers (`TOPO-15` canal failure)** | — | **`29.09 ± 3.90`** |
+| **4. Spatial Statistics Pre-checks** ($N=15$) | `naive` | `0/15` | `0.0%` `[0.0, 20.4]` | — | — | `2` islands, `NaN` | `κ ≤ 164,308` | `2.69 ± 0.77` |
+| | `naive_pre` | `0/15` | `0.0%` `[0.0, 20.4]` | — | — | `2` islands | `κ ≤ 164,308` | `4.33 ± 1.08` |
+| | **VeriGeo (`ns_vgp`)** | **`15/15`** | **`100.0%` `[79.6, 100.0]`** | — | — | **`0` islands** | **`κ = 1.00` (after predictor pruning)** | **`8.41 ± 1.80`** |
+| **5. Clean Control** ($N=10$) | `naive` | `10/10` | `100.0%` `[72.2, 100.0]` | `0.030%` | — | `0` repairs | — | `1.81 ± 1.58` |
+| | `naive_pre` | `10/10` | `100.0%` `[72.2, 100.0]` | `0.030%` | — | `0` repairs | — | `1.67 ± 1.57` |
+| | **VeriGeo (`ns_vgp`)** | **`10/10`** | **`100.0%` `[72.2, 100.0]`** | **`0.030%`** | — | **`0` repairs** | — | **`4.18 ± 0.78`** |
+| **All Tasks** ($N=70$) | `naive` | `10/70` | `14.3%` `[7.9, 24.3]` | `35.00%` | `169.56%` | `169.56%` | `3.987x` | `31.54` |
+| | `naive_pre` | `10/70` | `14.3%` `[7.9, 24.3]` | `35.00%` | `169.56%` | `169.56%` | `3.987x` | `27.11` |
+| | **VeriGeo (`ns_vgp`)** | **`67/70`** | **`95.7%` `[88.1, 98.5]`** | **`0.024%`** | **`0.0000%`** | **`10.10%` (3.84% 9-join)** | **`1.001x`** | **`25.44`** |
 
-### Documented Edge Cases (`4/70` Failures)
+### Documented Edge Cases (`3/70` Failures; `STAT-13` repaired at the pre-check level)
 
 To evaluate where rule-based verification reaches its limits, the benchmark includes four hard stress-test cases where VeriGeo fails the ground-truth threshold:
 1. **`MAUP-14` (Unmasked Coastal Water Barrier):** When `92%` of residents live on the western shore of an unmasked river/harbor (`x < -77.848`), smooth pycnophylactic interpolation diffuses population across the water boundary into eastern zones (`66.46%` zone NMAE, though total count is still conserved to `0.0000%`).
 2. **`MAUP-15` (Opaque Column Naming `attr_val`):** When median household income is stored as integer dollars (`38,500–92,000`) under the generic column name `attr_val`, lexical + value-range typing misclassifies it as an additive count and sums it across dissolved districts (`3.893x` inflation).
 3. **`TOPO-15` (Narrow Infrastructure Feature `0.80 m`):** When intersecting a `0.80 m`-wide utility canal with a parcel grid, the fixed `mean_width < 1.0 m` sliver filter removes the canal segment (`67.57%` area retained).
-4. **`STAT-13` (Three Mutually Collinear Predictors):** When three predictors are mutually collinear (`x2 ≈ x1` and `x3 ≈ x1 + x2`), single-pass collinearity pruning drops one column (`κ` drops from `164,308.0` to `66,186.9`), leaving the remaining pair collinear (`κ > 30`).
+4. **`STAT-13` (Three Mutually Collinear Predictors; repaired pre-check):** Iterative pre-check pruning removes two of the three collinear predictors, leaving one predictor and a recorded design-matrix condition number of `κ = 1.00`. This is only a pre-check result: the shared statistics executor emits Moran-style diagnostics for GWR/LISA-labelled tasks and does not fit GWR or LISA estimators.
 
 ---
 
