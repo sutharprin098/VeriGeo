@@ -1,6 +1,6 @@
 # Test and Validation Record
 
-**Scope note:** The eight-test Windows run below is the repository's previously recorded result (8 passed, 0 failed in 1.29 s). A ninth STAT-13 regression test was added in the Submission 6 revision branch; it was not executed during this review, so no 9-test pass claim is made.
+**Scope note:** The eight-test Windows run below is historical evidence only (8 passed, 0 failed in 1.29 s on the original suite). The revision branch now contains two additional regression tests—three-predictor STAT-13 pre-check coverage and missing-CRS rejection. Neither new test has been executed yet, so the historical 8-pass result must not be presented as a 10-test pass.
 
 ## 1. Automated Test Suite Execution
 - **Command**: `pytest -v d:\VeriGeo\tests`
