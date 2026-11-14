@@ -56,7 +56,8 @@ Evaluated on $4 \to 2$ incongruent polygon transfer (analytical uniform area-wei
 
 ## 3. Validation gaps identified in Submission 6 review
 
-- The checked test file does not contain the previously cited \`test_gwr_iterative_multicollinearity_pruning()\`; do not claim that test passed.
-- The current eight-test record does not independently validate STAT-13 iterative pruning with three mutually collinear predictors.
+- The checked test file does not contain the previously cited `test_gwr_iterative_multicollinearity_pruning()`; do not claim that test passed.
+- `test_stat13_iterative_condition_precheck_only()` has been added for three mutually collinear predictors. It asserts that the pre-check reduces the condition number to at most 30 and leaves one predictor; it does not assert that a GWR model was fitted. The test remains unexecuted.
+- `test_missing_crs_is_rejected_not_assumed_wgs84()` has been added to verify that unknown coordinate provenance is rejected instead of being labelled EPSG:4326. The test remains unexecuted.
 - The benchmark's 15/15 STAT pass rate is based on finite Moran-style outputs, zero island rows, and a design-matrix condition-number check. It is not a GWR/LISA/Getis-Ord model-fit or permutation-inference result.
 - No new pytest run or LaTeX compilation was performed as part of this review. Run `pytest -v` on the revision branch and rebuild/render the Overleaf bundle before submission.
