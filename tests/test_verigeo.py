@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 import geopandas as gpd
 from shapely.geometry import Polygon, box
 
@@ -296,4 +297,20 @@ def test_stat13_iterative_condition_precheck_only() -> None:
     # This test intentionally verifies the pre-check only; it does not assert a GWR fit.
     assert "global_moran_i" in result.columns
     assert "local_moran_i" in result.columns
+
+def test_missing_crs_is_rejected_not_assumed_wgs84() -> None:
+    """Unknown coordinate provenance must fail closed instead of being relabelled EPSG:4326."""
+    gdf = gpd.GeoDataFrame(
+        {"value": [1.0]},
+        geometry=[box(500000.0, 4500000.0, 501000.0, 4501000.0)],
+    )
+    assert gdf.crs is None
+
+    verifier = NeuroSymbolicGeoVerifier(auto_heal=True)
+    with pytest.raises(ValueError, match="explicitly defined CRS"):
+        verifier.verify_and_execute(
+            operator="buffer",
+            primary_gdf=gdf,
+            parameters={"distance_m": 100.0},
+        )
 
