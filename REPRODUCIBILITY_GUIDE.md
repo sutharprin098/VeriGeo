@@ -23,13 +23,13 @@ Dependencies:
 
 ## 2. Running the Test Suite
 
-Execute the 8 unit and integration tests:
+Execute the 9 unit and integration tests:
 
 ```bash
 pytest -v
 ```
 
-Expected output: `8 passed in ~1.5s`.
+Previously recorded output: `8 passed in ~1.5s` on the original suite. The revision branch adds `test_stat13_iterative_condition_precheck_only()`; its result is pending and must be verified with a fresh run.
 
 ## 3. Running the Complete 70-Task Benchmark Suite (535 Executions)
 
