@@ -1,38 +1,30 @@
 """Neuro-Symbolic Verifiable GeoAI Protocol (NS-VGP / VeriGeo 1.0).
 
-A formal neuro-symbolic verification and self-healing execution engine for
-Autonomous GIS workflows. Bridges neural LLM
-workflow planning with symbolic GIScience axioms grounded in foundational
-spatial theory:
+A runtime pre-check, repair, and audit-record layer for selected vector-GIS
+operations. The implementation checks four areas before/after operations:
 
-  - Axiom 1 (Metric & Geodesic CRS Invariant):
-      Enforces metric projection pre-conditions for Euclidean spatial operators
-      and bounds latitude-dependent secant distortion on geographic coordinates
-      (Snyder, 1987; Li & Ning, 2023). Automatically selects optimal local UTM
-      or Equal-Area (EPSG:6933 / EPSG:5070) projections.
-  - Axiom 2 (Semantic Scale Type & MAUP Mass-Conservation Invariant):
-      Distinguishes Extensive (additive totals/counts) vs. Intensive (ratios,
-      densities, rates, temperatures, indices) spatial variables (Kuhn, 2012;
-      Scheider & Ballatore, 2017; Openshaw, 1984). Prevents the Ecological
-      Fallacy of summing intensive variables during spatial joins/dissolves and
-      enforces Area-Weighted and Smooth Pycnophylactic Areal Interpolation
-      (Tobler, 1979; Goodchild & Lam, 1980) with exact mass conservation.
-  - Axiom 3 (Topological 9-Intersection & 2D Manifold Invariant):
-      Verifies OGC Simple Features / Egenhofer & Franzosa (1991) topological
-      validity, repairs self-intersecting rings via constructive geometry, and
-      filters overlay sliver artifacts using the Polsby-Popper compactness index
-      (Polsby & Popper, 1991).
-  - Axiom 4 (Spatial Statistical Pre-Condition Invariant):
-      Validates sample size, attribute variance, multicollinearity (condition
-      number), and spatial weights matrix connectivity (island detection and
-      k-NN row-standardized repair) prior to Moran's I, LISA (Anselin, 1995),
-      Getis-Ord Gi*, or GWR (Brunsdon et al., 1996).
+  - Axiom 1 (Metric CRS preconditions): selects projected CRSs for operations
+    that require planar distance or area calculations.
+  - Axiom 2 (Semantic scale and areal interpolation): classifies selected
+    attributes as extensive or intensive and applies pycnophylactic allocation
+    or area-weighted averaging. Exact source-total allocation is appropriate
+    only when target polygons cover the intended source support.
+  - Axiom 3 (Geometry validity and sliver heuristics): repairs invalid
+    geometries and filters selected thin/elongated overlay fragments. This is
+    not a complete implementation of the 9-intersection spatial-relation model.
+  - Axiom 4 (Spatial-statistics preconditions): checks target-variable values,
+    weights connectivity, and predictor-matrix conditioning. The current
+    operator executor emits Moran-style diagnostics for all STAT operator
+    labels; it does not fit GWR, LISA, or Getis-Ord estimators and does not
+    execute permutation inference.
 
-Every verified execution emits a cryptographic Spatial Proof Certificate (SPC)
-with SHA-256 provenance digest attesting that all four spatial axioms were
-formally satisfied or deterministically repaired.
+Each execution returns a Spatial Verification Record (SPC). Its SHA-256 digest
+identifies an audit payload containing operator/parameter metadata, axiom
+results, repair messages, and a guarantee flag. It is not a digital signature,
+a hash of the complete input/output spatial layers, or a proof of scientific
+correctness. The legacy internal class name SpatialProofCertificate is kept
+for API compatibility.
 """
-
 from __future__ import annotations
 
 import copy
@@ -250,7 +242,11 @@ class AxiomCheckResult:
 
 @dataclass
 class SpatialProofCertificate:
-    """Machine-verifiable Spatial Proof Certificate (SPC) attached to GeoAI outputs."""
+    """Legacy internal SPC data container; serialized externally as a Spatial Verification Record.
+
+    The SHA-256 value hashes audit metadata, not complete input/output geometries or attributes,
+    and does not constitute a digital signature or mathematical/scientific proof.
+    """
 
     certificate_id: str
     protocol_version: str
@@ -417,14 +413,17 @@ def pycnophylactic_areal_interpolation(
     max_iterations: int = 35,
     relaxation: float = 0.8,
 ) -> tuple["gpd.GeoDataFrame", dict[str, Any]]:
-    """Execute mass-preserving & scale-aware areal interpolation between incongruent zones.
+    """Execute scale-aware areal interpolation between incongruent zones.
 
     Combines:
-      1. Tobler's (1979) Smooth Pycnophylactic Interpolation + Exact Area-Weighted
-         Mass Allocation for extensive variables (counts/totals) guaranteeing
-         sum(source) == sum(target) up to floating-point precision.
-      2. Area-Weighted Intensive Integration for intensive variables (rates,
-         densities, indices) preventing the Ecological Fallacy / MAUP summation error.
+      1. Tobler-style smooth pycnophylactic weights with normalization of each
+         source total across its intersecting target pieces. If target zones cover
+         the full source support, this conserves source totals to floating-point
+         precision. This routine does not itself reject partial target coverage;
+         callers must validate support coverage before use.
+      2. Area-weighted averages for intensive values. This is not generally an
+         exact way to aggregate medians or socioeconomic rates; those may require
+         microdata or numerator/denominator weighting.
 
     Args:
         source_gdf: Source polygons with attribute columns.
@@ -634,13 +633,12 @@ def pycnophylactic_areal_interpolation(
 
 
 class NeuroSymbolicGeoVerifier:
-    """Formal Neuro-Symbolic Verification and Self-Healing Engine for GeoAI Workflows.
+    """Pre-check and repair engine for selected spatial-operation preconditions.
 
-    Verifies and automatically repairs spatial workflows across 4 formal axioms:
-      - Axiom 1 (A_CRS): Metric & Geodesic CRS Invariant
-      - Axiom 2 (A_MAUP): Intensive/Extensive Semantic Scale & Mass Conservation
-      - Axiom 3 (A_TOPO): Topological 9-Intersection & Polsby-Popper Manifold Validity
-      - Axiom 4 (A_STAT): Spatial Statistical Sample, Variance & Connectivity Pre-Conditions
+    The four checks cover projected CRS requirements, semantic attribute scale,
+    geometry validity/sliver heuristics, and selected spatial-statistics inputs.
+    These checks are not a formal proof of geospatial correctness and do not
+    replace actual GWR/LISA/Getis-Ord estimators or permutation inference.
     """
 
     def __init__(
@@ -1350,7 +1348,7 @@ class NeuroSymbolicGeoVerifier:
                 params["inference_mode"] = "conditional_permutation"
                 params["permutations"] = max(int(params.get("permutations", 999)), 999)
                 repair_actions.append(
-                    f"Switched {op_norm} from normal approximation to exact conditional Monte Carlo permutation (999 permutations)."
+                    f"Recorded conditional-permutation mode for {op_norm} and requested 999 permutations; inferential permutations are not executed by this module."
                 )
 
         # 3. Check Spatial Weights Connectivity (Island polygons with 0 Queen/Rook neighbors)
