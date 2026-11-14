@@ -457,22 +457,31 @@
       "crs_area_err_mean": 35.00051108306949,
       "maup_pop_total_err_mean": 169.55902654438964,
       "maup_pop_zone_nmae_mean": 169.55902654438964,
+      "maup_pop_zone_nmae_9std": 166.36697393821072,
       "maup_income_ratio_mean": 3.986530083011135,
+      "maup_income_ratio_all15": 4.022824442001162,
+      "maup_income_ratio_14std": 4.032079108899123,
       "maup_income_err_mean": 298.6530083011135,
-      "maup_income_mape_mean": 303.8201240048676
+      "maup_income_mape_mean": 303.8201240048676,
+      "maup_income_mape_14std": 306.9325213924506
     },
     "ns_vgp": {
       "crs_area_err_median": 0.014799513061556857,
-      "crs_area_err_mean": 0.02373463004731693,
+      "crs_area_err_mean": 0.02448318764390379,
       "maup_pop_total_err_mean": 1.9292969570661113e-15,
       "maup_pop_zone_nmae_mean": 10.100131442185187,
+      "maup_pop_zone_nmae_9std": 3.8384356689356998,
       "maup_income_ratio_mean": 0.9981100458395507,
+      "maup_income_ratio_all15": 1.2013540824962876,
+      "maup_income_ratio_14std": 1.0090751522867578,
       "maup_income_err_mean": 0.4427503744155681,
-      "maup_income_mape_mean": 1.1789292722582096
+      "maup_income_mape_mean": 1.1789292722582096,
+      "maup_income_mape_14std": 1.9700253068937243
     },
     "areaw": {
-      "maup_pop_total_err_mean": 0.0002934180919379122,
-      "maup_pop_zone_nmae_mean": 12.801816675137042,
+      "maup_pop_total_err_mean": 7.667670246008604e-15,
+      "maup_pop_zone_nmae_mean": 12.80189689187613,
+      "maup_pop_zone_nmae_9std": 7.972354690026778,
       "maup_income_mape_mean": 1.1789292722582096
     }
   },
@@ -508,43 +517,43 @@
   },
   "latency_ms": {
     "CRS": {
-      "mean": 30.520513332885457,
-      "std": 49.62488419402821
+      "mean": 26.029413332920132,
+      "std": 23.3855809300643
     },
     "MAUP": {
-      "mean": 114.73495999962324,
-      "std": 60.70209464733776
+      "mean": 129.7438000003846,
+      "std": 60.6067880482583
     },
     "TOPO": {
-      "mean": 40.519813333958155,
-      "std": 5.851219362944946
+      "mean": 58.5943666669967,
+      "std": 7.062435875561353
     },
     "STAT": {
-      "mean": 15.836353333482597,
-      "std": 2.2405454802982674
+      "mean": 18.444639999991825,
+      "std": 3.683218088811983
     },
     "CONTROL": {
-      "mean": 8.053870000730967,
-      "std": 1.710750417882507
+      "mean": 12.763389999599895,
+      "std": 2.869776209602178
     }
   },
   "mean_latency_by_method_ms": {
-    "naive": 47.020222857411554,
-    "naive_pre": 38.842051428582636,
-    "ns_vgp": 44.353047142950736
+    "naive": 62.83300285717165,
+    "naive_pre": 52.2641442852286,
+    "ns_vgp": 51.71167428571997
   },
   "case_study": {
     "task": "MAUP-01",
     "true_total_pop": 37315.0,
     "naive_total_pop": 105618.0,
     "verigeo_total_pop": 37315.0,
-    "areaw_total_pop": 37314.868551922475,
+    "areaw_total_pop": 37315.00000000001,
     "true_mean_income": 84899.82621148959,
     "naive_mean_income": 339820.1407481385,
     "verigeo_mean_income": 84937.5075513751,
     "zone_nmae_pct": {
       "naive": 183.04435213721024,
-      "areaw": 10.625077522170532,
+      "areaw": 10.625163144253811,
       "verigeo": 3.156503076164236
     }
   }

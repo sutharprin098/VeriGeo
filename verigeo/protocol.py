@@ -363,21 +363,26 @@ def compute_optimal_metric_crs(
     linear_distortion_pct = (sec_phi - 1.0) * 100.0
     areal_distortion_pct = (sec_phi - 1.0) * 100.0
 
-    if require_equal_area or span_lon > 6.5 or span_lat > 10.0:
-        # Check if within North America (CONUS) for NAD83 Albers Equal Area
-        if -130.0 <= center_lon <= -60.0 and 20.0 <= center_lat <= 55.0:
+    if require_equal_area:
+        # Check if within Continental US (CONUS) for NAD83 Conus Albers Equal Area
+        if -125.0 <= center_lon <= -66.5 and 24.0 <= center_lat <= 49.5:
             target_crs = "EPSG:5070"
-        elif -15.0 <= center_lon <= 40.0 and 34.0 <= center_lat <= 72.0:
+        elif -11.0 <= center_lon <= 35.0 and 35.0 <= center_lat <= 72.0:
             target_crs = "EPSG:3035"  # ETRS89-extended / LAEA Europe
         else:
             target_crs = "EPSG:6933"  # WGS 84 / NSIDC EASE-Grid 2.0 Global Equal Area
     else:
-        utm_zone = int(math.floor((center_lon + 180.0) / 6.0)) + 1
-        utm_zone = max(1, min(60, utm_zone))
-        if center_lat >= 0:
-            target_crs = f"EPSG:{32600 + utm_zone}"
+        if center_lat >= 80.0:
+            target_crs = "EPSG:3413"  # WGS 84 / NSIDC Sea Ice Polar Stereographic North
+        elif center_lat <= -80.0:
+            target_crs = "EPSG:3031"  # WGS 84 / Antarctic Polar Stereographic
         else:
-            target_crs = f"EPSG:{32700 + utm_zone}"
+            utm_zone = int(math.floor((center_lon + 180.0) / 6.0)) + 1
+            utm_zone = max(1, min(60, utm_zone))
+            if center_lat >= 0:
+                target_crs = f"EPSG:{32600 + utm_zone}"
+            else:
+                target_crs = f"EPSG:{32700 + utm_zone}"
 
     metrics = {
         "center_lon": round(center_lon, 6),
@@ -856,6 +861,7 @@ class NeuroSymbolicGeoVerifier:
             else crs1_str
         )
         is_geographic = bool(gdf1.crs.is_geographic)
+        is_web_mercator = "3857" in crs1_str or "Pseudo-Mercator" in crs1_str
         crs_mismatch = gdf2 is not None and (crs1_str != crs2_str)
 
         # Compute distortion metrics on WGS84 bounds
@@ -888,7 +894,7 @@ class NeuroSymbolicGeoVerifier:
                 ),
             )
 
-        pre_ok = (not is_geographic or not requires_metric) and (not crs_mismatch)
+        pre_ok = (not is_geographic and not is_web_mercator or not requires_metric) and (not crs_mismatch)
         if pre_ok:
             dist_metrics["final_crs"] = crs1_str
             return (
@@ -907,9 +913,9 @@ class NeuroSymbolicGeoVerifier:
             )
 
         violation_reasons: list[str] = []
-        if is_geographic and requires_metric:
+        if (is_geographic or is_web_mercator) and requires_metric:
             violation_reasons.append(
-                f"Metric operator '{op_norm}' invoked on unprojected geographic CRS ({crs1_str}) "
+                f"Metric operator '{op_norm}' invoked on distorted CRS ({crs1_str}) "
                 f"with {dist_metrics['unprojected_linear_distortion_pct']:.1f}% latitude secant distortion."
             )
         if crs_mismatch:
@@ -918,7 +924,7 @@ class NeuroSymbolicGeoVerifier:
             )
 
         if self.auto_heal:
-            target_crs = optimal_crs if (is_geographic and requires_metric) else crs1_str
+            target_crs = optimal_crs if ((is_geographic or is_web_mercator) and requires_metric) else crs1_str
             gdf1 = gdf1.to_crs(target_crs)
             if gdf2 is not None:
                 gdf2 = gdf2.to_crs(target_crs)
@@ -1201,11 +1207,12 @@ class NeuroSymbolicGeoVerifier:
             mean_area = float(np.mean(areas)) if len(areas) > 0 else 0.0
             pp_scores = np.array([polsby_popper_compactness(g) for g in out.geometry], dtype=float)
             if self.sliver_rule == "mean_width":
-                # mean width ~ 2A/P (exact for thin rectangles), converted to metres if needed
+                # Equivalent strip width 2A/P combined with elongation (Polsby-Popper < 0.25)
+                # so compact small footprints (e.g., 1.5m x 1.5m vaults with PP = 0.785) are preserved.
                 perims = out.geometry.length.to_numpy(dtype=float)
                 scale = 111320.0 if (out.crs is not None and out.crs.is_geographic) else 1.0
                 widths = 2.0 * areas / np.maximum(perims, 1e-12) * scale
-                sliver_mask = widths < self.sliver_min_width_m
+                sliver_mask = (widths < self.sliver_min_width_m) & (pp_scores < 0.25)
             else:  # "pp_relative": original v1 rule
                 sliver_mask = (pp_scores < self.sliver_compactness_threshold) & (
                     areas < self.sliver_relative_area_threshold * max(mean_area, 1e-9)

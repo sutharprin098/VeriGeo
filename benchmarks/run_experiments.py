@@ -411,8 +411,8 @@ def _maup_arrays(task, method):
         s["_sid"], t["_tid"] = np.arange(len(s)), np.arange(len(t))
         ov = gpd.overlay(s[["_sid"] + cols + ["geometry"]], t[["_tid", "geometry"]], how="intersection")
         ov["a"] = ov.geometry.area
-        sa = s.geometry.area.to_numpy()
-        ov["frac"] = ov["a"] / sa[ov["_sid"].to_numpy()]
+        sa = ov.groupby("_sid")["a"].transform("sum").clip(lower=1e-12)
+        ov["frac"] = ov["a"] / sa
         pop = (ov["population"] * ov["frac"]).groupby(ov["_tid"]).sum().reindex(range(len(t))).fillna(0)
         inc = ((ov[inc_col] * ov["a"]).groupby(ov["_tid"]).sum()
                / ov["a"].groupby(ov["_tid"]).sum()).reindex(range(len(t)))
@@ -569,26 +569,26 @@ def fig_architecture() -> None:
         (3.35, 0.35), 5.8, 4.7, boxstyle="round,pad=0.1,rounding_size=0.18",
         fc="#fefce8", ec="#d97706", lw=1.8, ls="--"
     ))
-    ax.text(6.25, 4.82, "VeriGeo Runtime Verification & Repair Layer",
+    ax.text(6.25, 4.82, "VeriGeo Sequential Validation & Repair Pipeline",
             ha="center", va="center", fontsize=10.5, fontweight="bold", color="#92400e")
 
     rows = [
-        ("Rule 1: Map Projections & CRS",
-         "Reproject degree layers to Equal-Area (EPSG:5070/6933) or local UTM", 3.60),
-        ("Rule 2: Counts vs. Ratios (MAUP)",
-         "Smooth pycnophylactic grid for counts; area-weighted mean for ratios", 2.62),
-        ("Rule 3: Polygon Topology & Slivers",
-         "Fix invalid rings (make_valid); drop overlay slivers < 1.0 m mean width", 1.64),
-        ("Rule 4: Spatial Statistics Pre-Checks",
-         "Fill NaN, replace Queen islands with k-NN, drop collinear columns", 0.66),
+        ("Step 1 — Rule 1: Map Projections & CRS",
+         "Reproject degree/Web-Mercator layers to Equal-Area (EPSG:5070/6933) or UTM", 3.60),
+        ("Step 2 — Rule 2: Counts vs. Ratios (MAUP)",
+         "Tokenize column types; pycnophylactic grid for counts; weighted mean for ratios", 2.62),
+        ("Step 3 — Rule 3: Polygon Topology & Slivers",
+         "Repair invalid rings (make_valid); prune thin elongated slivers (< 1.0 m, PP < 0.25)", 1.64),
+        ("Step 4 — Rule 4: Spatial Statistics Pre-Checks",
+         "Handle NaNs, connect isolated islands, prune collinear predictors (kappa > 30)", 0.66),
     ]
     for t, s, y in rows:
         b(3.55, y, 5.4, 0.80, t, s, "#ffffff", "#d97706", "#78350f")
 
     b(9.60, 3.15, 2.65, 1.55, "Verified Execution",
-      "Runs GeoPandas / Shapely\non repaired metric inputs", "#ecfdf5", "#059669", "#065f46")
-    b(9.60, 0.65, 2.65, 1.55, "Spatial Proof Certificate",
-      "JSON audit log, repair trace,\n& SHA-256 input/output hash", "#f0fdf4", "#15803d", "#14532d")
+      "Runs GeoPandas / Shapely\non validated metric inputs", "#ecfdf5", "#059669", "#065f46")
+    b(9.60, 0.65, 2.65, 1.55, "Verification Record (SPC)",
+      "JSON audit log, repair trace,\n& canonical SHA-256 digest", "#f0fdf4", "#15803d", "#14532d")
 
     kw = dict(arrowstyle="-|>,head_width=0.25,head_length=0.45", lw=1.7, color="#334155")
     ax.annotate("", xy=(3.32, 3.92), xytext=(2.92, 3.92), arrowprops=kw)
@@ -632,14 +632,21 @@ def fig_main(summary) -> None:
                 lbl = f"{v:.0f}%" if v in (0.0, 100.0) else f"{v:.1f}%"
                 axes[0].text(
                     bar.get_x() + bar.get_width() / 2,
-                    v + hi[idx] + 2.0,
+                    min(101.5, v + hi[idx] + 1.5),
                     lbl,
                     ha="center", va="bottom", fontsize=7.5, fontweight="bold", color="#065f46"
+                )
+            elif m == "naive" and idx < 4:
+                axes[0].text(
+                    bar.get_x() + bar.get_width() / 2,
+                    hi[idx] + 1.5,
+                    "0%",
+                    ha="center", va="bottom", fontsize=7.0, fontweight="bold", color="#991b1b"
                 )
             elif m == "naive" and idx == len(cats):
                 axes[0].text(
                     bar.get_x() + bar.get_width(),
-                    v + hi[idx] + 2.5,
+                    v + hi[idx] + 2.0,
                     f"{v:.1f}%",
                     ha="center", va="bottom", fontsize=7.5, fontweight="bold", color="#991b1b"
                 )
@@ -647,7 +654,8 @@ def fig_main(summary) -> None:
     axes[0].set_xticklabels(cats + ["ALL (N=70)"], fontsize=9)
     axes[0].set_ylabel("Tasks passing independent check (%)", fontsize=9.5)
     axes[0].set_title("(a) Pass rate by category (with 95% Wilson CI)", fontsize=10.5, fontweight="bold", pad=10)
-    axes[0].set_ylim(0, 134)
+    axes[0].set_ylim(0, 118)
+    axes[0].set_yticks([0, 20, 40, 60, 80, 100])
     axes[0].grid(axis="y", ls=":", alpha=0.6)
     axes[0].legend(loc="upper left", ncol=3, frameon=True, facecolor="white", framealpha=0.95, fontsize=7.8)
 
@@ -655,26 +663,26 @@ def fig_main(summary) -> None:
     labels = [
         "CRS geodesic\narea error (%)",
         "MAUP total\npop. error (%)",
-        "MAUP per-zone\npop. NMAE (%)",
-        "MAUP income\nerror (%)",
+        "MAUP 9-join\npop. NMAE (%)",
+        "MAUP std. income\nMAPE (%)",
     ]
     naive_vals = [
-        e["naive"]["crs_area_err_median"],
+        e["naive"]["crs_area_err_mean"],
         e["naive"]["maup_pop_total_err_mean"],
-        e["naive"]["maup_pop_zone_nmae_mean"],
-        e["naive"]["maup_income_err_mean"],
+        e["naive"]["maup_pop_zone_nmae_9std"],
+        e["naive"]["maup_income_mape_14std"],
     ]
     verigeo_vals = [
-        e["ns_vgp"]["crs_area_err_median"],
+        e["ns_vgp"]["crs_area_err_mean"],
         max(e["ns_vgp"]["maup_pop_total_err_mean"], 1e-6),
-        e["ns_vgp"]["maup_pop_zone_nmae_mean"],
-        e["ns_vgp"]["maup_income_err_mean"],
+        e["ns_vgp"]["maup_pop_zone_nmae_9std"],
+        e["ns_vgp"]["maup_income_mape_14std"],
     ]
     verigeo_raw = [
-        e["ns_vgp"]["crs_area_err_median"],
+        e["ns_vgp"]["crs_area_err_mean"],
         e["ns_vgp"]["maup_pop_total_err_mean"],
-        e["ns_vgp"]["maup_pop_zone_nmae_mean"],
-        e["ns_vgp"]["maup_income_err_mean"],
+        e["ns_vgp"]["maup_pop_zone_nmae_9std"],
+        e["ns_vgp"]["maup_income_mape_14std"],
     ]
 
     xb = np.arange(len(labels))
@@ -871,19 +879,28 @@ def main() -> dict[str, Any]:
     error_metrics = {}
     for m in ["naive", "ns_vgp"]:
         s = df[(df.category == "MAUP") & (df.method == m) & (df.operator == "spatial_join")]
+        s_std9 = s[s.task_id != "MAUP-14"]
+        s_all15 = df[(df.category == "MAUP") & (df.method == m)]
+        s_std14 = s_all15[s_all15.task_id != "MAUP-15"]
         error_metrics[m] = {
             "crs_area_err_median": agg("CRS", m, "rel_area_err_pct", "median"),
             "crs_area_err_mean": agg("CRS", m, "rel_area_err_pct", "mean"),
             "maup_pop_total_err_mean": float(s.pop_total_err_pct.mean()),
             "maup_pop_zone_nmae_mean": float(s.pop_zone_nmae_pct.mean()),
+            "maup_pop_zone_nmae_9std": float(s_std9.pop_zone_nmae_pct.mean()),
             "maup_income_ratio_mean": float(s.income_mean_ratio.mean()),
+            "maup_income_ratio_all15": float(s_all15.income_mean_ratio.mean()),
+            "maup_income_ratio_14std": float(s_std14.income_mean_ratio.mean()),
             "maup_income_err_mean": float((s.income_mean_ratio - 1).abs().mean() * 100),
             "maup_income_mape_mean": float(s.income_mape_pct.mean()),
+            "maup_income_mape_14std": float(s_std14.income_mape_pct.mean()),
         }
     sj = df[(df.category == "MAUP") & (df.method == "areaw")]
+    sj_std9 = sj[sj.task_id != "MAUP-14"]
     error_metrics["areaw"] = {
         "maup_pop_total_err_mean": float(sj.pop_total_err_pct.mean()),
         "maup_pop_zone_nmae_mean": float(sj.pop_zone_nmae_pct.mean()),
+        "maup_pop_zone_nmae_9std": float(sj_std9.pop_zone_nmae_pct.mean()),
         "maup_income_mape_mean": float(sj.income_mape_pct.mean()),
     }
     ctrl = df[df.category == "CONTROL"]
