@@ -1,6 +1,6 @@
 # Test and Validation Record
 
-**Scope note:** This document records the repository's previously reported Windows test run; the tests were not re-executed during the Submission 6 manuscript review. The checked `tests/test_verigeo.py` currently contains eight tests.
+**Scope note:** The eight-test Windows run below is the repository's previously recorded result (8 passed, 0 failed in 1.29 s). A ninth STAT-13 regression test was added in the Submission 6 revision branch; it was not executed during this review, so no 9-test pass claim is made.
 
 ## 1. Automated Test Suite Execution
 - **Command**: `pytest -v d:\VeriGeo\tests`
@@ -59,4 +59,4 @@ Evaluated on $4 \to 2$ incongruent polygon transfer (analytical uniform area-wei
 - The checked test file does not contain the previously cited \`test_gwr_iterative_multicollinearity_pruning()\`; do not claim that test passed.
 - The current eight-test record does not independently validate STAT-13 iterative pruning with three mutually collinear predictors.
 - The benchmark's 15/15 STAT pass rate is based on finite Moran-style outputs, zero island rows, and a design-matrix condition-number check. It is not a GWR/LISA/Getis-Ord model-fit or permutation-inference result.
-- No new pytest run or LaTeX compilation was performed as part of this review. Re-run the test suite and rebuild/render the Overleaf bundle after applying the next code and manuscript changes.
+- No new pytest run or LaTeX compilation was performed as part of this review. Run `pytest -v` on the revision branch and rebuild/render the Overleaf bundle before submission.
