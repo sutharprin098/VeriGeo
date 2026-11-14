@@ -38,20 +38,20 @@
 
 \begin{document}
 
-\twocolumn[
+\twocolumn[{
 \begin{@twocolumnfalse}
 \begin{center}
-  {\footnotesize\texttt{EarthArXiv Preprint $\cdot$ Non-peer-reviewed preprint submitted to EarthArXiv}}\\[8pt]
-  {\LARGE\textbf{VeriGeo: Runtime Verification for Projections, Areal Interpolation, Topology, and Spatial Statistics in Automated GIS}}\\[10pt]
-  {\large\textbf{Prince Suthar}}\\[3pt]
-  {\normalsize AutoGIS Research Lab}\\
-  {\small\texttt{https://autogis.princesite.in/} $\cdot$ \texttt{https://github.com/sutharprin098/VeriGeo}}\\[4pt]
+  {\footnotesize\texttt{EarthArXiv Preprint $\cdot$ Non-peer-reviewed preprint submitted to EarthArXiv}}\par\vspace{8pt}
+  {\LARGE\textbf{VeriGeo: Runtime Verification for Projections, Areal Interpolation, Topology, and Spatial Statistics in Automated GIS}}\par\vspace{10pt}
+  {\large\textbf{Prince Suthar}}\par\vspace{3pt}
+  {\normalsize AutoGIS Research Lab}\par\vspace{2pt}
+  {\small\texttt{https://autogis.princesite.in/} $\cdot$ \texttt{https://github.com/sutharprin098/VeriGeo}}\par\vspace{4pt}
   {\normalsize November 2026}
 \end{center}
 
 \vspace{6pt}
 \noindent\rule{\textwidth}{0.5pt}
-\vspace{2pt}
+\vspace{4pt}
 
 \noindent\textbf{Abstract.}
 Automated GIS tools such as LLM-Geo, GIS Copilot, and GeoGPT use large language models to write and run Python scripts for spatial analysis. In practice, these tools treat a task as successful whenever the generated script exits with code $0$ and saves an output file. Because libraries like GeoPandas and Shapely allow invalid cartographic and statistical operations without raising Python errors, scripts that finish cleanly still frequently produce wrong maps and tables. Buffers and areas get calculated directly on unprojected latitude-longitude coordinates ($\text{EPSG}:4326$) or with fixed degree-to-meter constants ($111,320\text{ m/deg}$). Spatial joins and polygon dissolves sum ($\texttt{SUM}$) ratio variables such as median income, population density, PM$_{2.5}$, or NDVI while double-counting population totals across overlapping zones. Polygon overlays leave self-intersecting rings and thin boundary slivers in output layers, and spatial statistics such as Moran's $I$, LISA, and GWR run on disconnected contiguity graphs, missing values, small samples ($N < 30$), or collinear predictors.
@@ -67,7 +67,7 @@ We tested VeriGeo against standard GeoPandas baselines (\texttt{naive}, \texttt{
 \noindent\rule{\textwidth}{0.8pt}
 \vspace{14pt}
 \end{@twocolumnfalse}
-]
+}]
 
 \section{Introduction}
 
