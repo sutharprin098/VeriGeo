@@ -186,8 +186,8 @@ VeriGeo/
 ## Citation
 
 ```bibtex
-@article{suthar2026verigeo,
-  author  = {Suthar, Prince},
+@article{prince2026verigeo,
+  author  = {Prince},
   title   = {{VeriGeo}: Runtime Verification for Projections, Areal Interpolation, Topology, and Spatial Statistics in Automated {GIS}},
   journal = {EarthArXiv Preprint},
   year    = {2026},

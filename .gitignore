@@ -13,3 +13,7 @@ venv/
 *.blg
 *.log
 *.out
+*.synctex.gz
+*.zip
+*.tar.gz
+.DS_Store

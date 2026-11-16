@@ -2,8 +2,8 @@
 
 # VeriGeo: Runtime Verification for Projections, Areal Interpolation, Topology, and Spatial Statistics in Automated GIS
 
-**Prince Suthar**  
-*AutoGIS Research Lab*  
+**Prince** [![ORCID](https://img.shields.io/badge/ORCID-0009--0008--5483--2837-A6CE39?logo=orcid&logoColor=white)](https://orcid.org/0009-0008-5483-2837)  
+*Independent Researcher*  
 `https://github.com/sutharprin098/VeriGeo`  
 *November 2026*
 
